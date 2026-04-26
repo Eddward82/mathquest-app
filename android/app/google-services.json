@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "420810329731",
+    "project_id": "responsive-hall-399315",
+    "storage_bucket": "responsive-hall-399315.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:420810329731:android:beba98c266316dfdf055b6",
+        "android_client_info": {
+          "package_name": "com.mathquestapp.learn"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "420810329731-8fdsbo2ntdhcmlr3i1tp22i653upmmhc.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mathquestapp.learn",
+            "certificate_hash": "c6338375783a3436a2e8ef9c78d37444406dff12"
+          }
+        },
+        {
+          "client_id": "420810329731-kigurj0h8ns5pidmjmok368085t9ed98.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAr6iL9PcsNYe2HXk-6Gku0lnHOdjbhUgo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "420810329731-kigurj0h8ns5pidmjmok368085t9ed98.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,71 @@
+{
+  "project_info": {
+    "project_number": "420810329731",
+    "project_id": "responsive-hall-399315",
+    "storage_bucket": "responsive-hall-399315.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:420810329731:android:3b5984e101161655f055b6",
+        "android_client_info": {
+          "package_name": "com.mathquestapp.learn"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "420810329731-7de9kuhftasrand2l0jofntedoralb9f.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mathquestapp.learn",
+            "certificate_hash": "5a4cb6d2696a4172353b2f72675fbdae1c862402"
+          }
+        },
+        {
+          "client_id": "420810329731-8b6jucbvg8cbdtptuuohb1hg2qdsgqb7.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mathquestapp.learn",
+            "certificate_hash": "c38b8c64545865316995cee52fa68abff442f6a6"
+          }
+        },
+        {
+          "client_id": "420810329731-iak6qhh9jlgrvdrl4ukeb1g06cjt769t.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mathquestapp.learn",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
+          "client_id": "420810329731-u561iv4a7d4tp07ptijhpa5upfbbq1tg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mathquestapp.learn",
+            "certificate_hash": "c6338375783a3436a2e8ef9c78d37444406dff12"
+          }
+        },
+        {
+          "client_id": "420810329731-kigurj0h8ns5pidmjmok368085t9ed98.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAr6iL9PcsNYe2HXk-6Gku0lnHOdjbhUgo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "420810329731-kigurj0h8ns5pidmjmok368085t9ed98.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
