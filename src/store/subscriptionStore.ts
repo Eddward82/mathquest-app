@@ -15,7 +15,7 @@ function isPremiumActive(expiresAt: string | null | undefined): boolean {
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
-export type PlanId = "monthly" | "yearly" | "lifetime";
+export type PlanId = "monthly" | "yearly";
 
 export interface Plan {
   id: PlanId;
@@ -30,26 +30,18 @@ export const PLANS: Plan[] = [
   {
     id: "monthly",
     label: "Monthly",
-    price: "$4.99",
-    perMonth: "$4.99/mo",
+    price: "$5.99",
+    perMonth: "$5.99/mo",
     badge: null,
     highlight: false,
   },
   {
     id: "yearly",
     label: "Yearly",
-    price: "$29.99",
-    perMonth: "$2.50/mo",
+    price: "$47.99",
+    perMonth: "$4.00/mo",
     badge: "Best Value",
     highlight: true,
-  },
-  {
-    id: "lifetime",
-    label: "Lifetime",
-    price: "$79.99",
-    perMonth: "One-time",
-    badge: null,
-    highlight: false,
   },
 ];
 
@@ -169,9 +161,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
 }));
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-function computeExpiry(planId: PlanId): string | null {
-  if (planId === "lifetime") return null; // never expires
-
+function computeExpiry(planId: PlanId): string {
   const d = new Date();
   if (planId === "monthly") d.setMonth(d.getMonth() + 1);
   if (planId === "yearly") d.setFullYear(d.getFullYear() + 1);

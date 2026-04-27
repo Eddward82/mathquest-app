@@ -37,6 +37,8 @@ export default function LoginScreen() {
     }
   };
 
+  const isVerifyEmail = error === "verify_email";
+
   const handleGoogleSignIn = async () => {
     clearError();
     await signInWithGoogle();
@@ -67,8 +69,18 @@ export default function LoginScreen() {
           </Text>
         </View>
 
+        {/* Email verification banner */}
+        {isVerifyEmail && (
+          <View style={styles.verifyBanner}>
+            <Feather name="mail" size={16} color="#0369A1" />
+            <Text style={styles.verifyBannerText}>
+              A verification email has been sent. Please check your inbox and verify your email before signing in.
+            </Text>
+          </View>
+        )}
+
         {/* Error banner */}
-        {error && (
+        {error && !isVerifyEmail && (
           <View style={styles.errorBanner}>
             <Feather name="alert-circle" size={16} color={COLORS.dangerDark} />
             <Text style={styles.errorBannerText}>{error}</Text>
@@ -127,17 +139,6 @@ export default function LoginScreen() {
           <Text style={styles.googleBtnText}>Continue with Google</Text>
         </TouchableOpacity>
 
-        <Button
-          title="Continue as Guest"
-          onPress={() => {
-            useAuthStore.getState().continueAsGuest();
-            router.replace("/(tabs)");
-          }}
-          variant="outline"
-          size="lg"
-          fullWidth
-        />
-
         <View style={styles.footer}>
           <Text style={styles.footerText}>Don't have an account? </Text>
           <TouchableOpacity onPress={() => router.replace("/(auth)/signup")}>
@@ -170,6 +171,17 @@ const styles = StyleSheet.create({
     borderColor: "#FECACA",
   },
   errorBannerText: { color: COLORS.dangerDark, fontWeight: "500", flex: 1, fontSize: 14 },
+  verifyBanner: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    backgroundColor: "#E0F2FE",
+    borderRadius: BORDER_RADIUS.lg,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "#BAE6FD",
+  },
+  verifyBannerText: { color: "#0369A1", fontWeight: "500", flex: 1, fontSize: 14, lineHeight: 20 },
   forgotBtn: { alignSelf: "flex-end" },
   forgotText: { color: COLORS.primary, fontWeight: "600", fontSize: 14 },
   divider: { flexDirection: "row", alignItems: "center", gap: 12 },

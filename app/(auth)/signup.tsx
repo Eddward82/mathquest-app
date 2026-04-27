@@ -42,8 +42,8 @@ export default function SignupScreen() {
     if (!validate()) return;
     await signUp(form.email, form.password, form.username);
     const store = useAuthStore.getState();
-    if (!store.error) {
-      router.replace("/onboarding");
+    if (store.error === "verify_email") {
+      router.replace("/(auth)/login");
     }
   };
 

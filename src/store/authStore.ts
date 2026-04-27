@@ -21,7 +21,6 @@ interface AuthState {
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
-  continueAsGuest: () => void;
   updateSkillLevel: (level: SkillLevel) => Promise<void>;
   updateOnboarding: (data: { goal: UserGoal; daily_target_minutes: number; focus_topics: TopicCategory[] }) => Promise<void>;
   setUser: (user: User | null) => void;
@@ -74,7 +73,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           last_activity_date: null,
         });
 
-      set({ user: profile, isGuest: false });
+      // Send verification email
+      await fbUser.sendEmailVerification();
+
+      set({ user: profile, isGuest: false, error: "verify_email" });
     } catch (err: any) {
       console.log("SIGNUP ERROR:", err.code, err.message);
       set({ error: formatFirebaseError(err.code) });
@@ -90,6 +92,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         email,
         password
       );
+
+      // Block unverified email users
+      if (!fbUser.emailVerified) {
+        await auth().signOut();
+        set({ error: "verify_email" });
+        return;
+      }
 
       // Fetch Firestore profile
       const snap = await userDoc(fbUser.uid).get();
@@ -174,16 +183,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  continueAsGuest: () => {
-    const guestUser: User = {
-      id: "guest",
-      email: "guest@mathquest.app",
-      username: "Guest",
-      skill_level: "beginner",
-      created_at: new Date().toISOString(),
-    };
-    set({ user: guestUser, isGuest: true });
-  },
 
   updateSkillLevel: async (level) => {
     const { user, isGuest } = get();

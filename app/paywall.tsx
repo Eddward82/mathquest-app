@@ -174,9 +174,7 @@ export default function PaywallScreen() {
           </TouchableOpacity>
 
           <Text style={styles.legalText}>
-            {selectedPlan === "lifetime"
-              ? "One-time purchase · No subscription"
-              : "Cancel anytime · Billed " + (selectedPlan === "monthly" ? "monthly" : "annually")}
+            {"Cancel anytime · Billed " + (selectedPlan === "monthly" ? "monthly" : "annually")}
           </Text>
 
           <TouchableOpacity onPress={() => router.back()} style={styles.skipBtn}>

@@ -22,12 +22,10 @@ import Animated, {
   interpolate,
 } from "react-native-reanimated";
 import { COLORS, BORDER_RADIUS, SHADOWS } from "../../src/constants/theme";
-import { useAuthStore } from "../../src/store/authStore";
 
 const { width, height } = Dimensions.get("window");
 
 export default function WelcomeScreen() {
-  const { continueAsGuest } = useAuthStore();
 
   // ── Entrance animations ───────────────────────────────────────────────────
   const logoScale = useSharedValue(0);
@@ -112,11 +110,6 @@ export default function WelcomeScreen() {
   const bubble4Style = useAnimatedStyle(() => ({ transform: [{ translateY: float4.value }] }));
   const bubble5Style = useAnimatedStyle(() => ({ transform: [{ translateY: float5.value }] }));
 
-  const handleGuest = () => {
-    continueAsGuest();
-    router.replace("/onboarding");
-  };
-
   return (
     <View style={styles.root}>
       <LinearGradient
@@ -195,9 +188,6 @@ export default function WelcomeScreen() {
             label="I already have an account"
             onPress={() => router.push("/(auth)/login")}
           />
-          <TouchableOpacity onPress={handleGuest} style={styles.guestBtn}>
-            <Text style={styles.guestText}>Continue as Guest</Text>
-          </TouchableOpacity>
         </Animated.View>
       </SafeAreaView>
     </View>
