@@ -130,6 +130,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ isLoading: true, error: null });
     try {
       await GoogleSignin.hasPlayServices();
+      // Sign out first to force the account picker to always appear
+      await GoogleSignin.signOut();
       const signInResult = await GoogleSignin.signIn();
       const idToken = signInResult.data?.idToken;
       if (!idToken) throw new Error("No ID token returned from Google");
