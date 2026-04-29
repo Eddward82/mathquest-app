@@ -24,6 +24,7 @@ import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { useAuthStore } from "../src/store/authStore";
 import { useSubscriptionStore, PLANS, PlanId, Plan } from "../src/store/subscriptionStore";
+import { Alert } from "react-native";
 import { COLORS, BORDER_RADIUS } from "../src/constants/theme";
 
 const PERKS = [
@@ -55,14 +56,34 @@ export default function PaywallScreen() {
   }, []);
   const crownStyle = useAnimatedStyle(() => ({ transform: [{ scale: crownScale.value }] }));
 
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
   const handleSubscribe = async () => {
     if (!user) return;
+    setErrorMsg(null);
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setIsLoading(true);
     try {
-      // In production: integrate with RevenueCat / Stripe / IAP here
       await activatePremium(user.id, selectedPlan);
       router.back();
+    } catch (e: any) {
+      setErrorMsg(e.message ?? "Purchase failed. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleRestore = async () => {
+    setErrorMsg(null);
+    setIsLoading(true);
+    try {
+      const { restorePurchases } = useSubscriptionStore.getState();
+      const result = await restorePurchases();
+      if (result.success) {
+        router.back();
+      } else {
+        setErrorMsg("No active subscription found to restore.");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -176,6 +197,14 @@ export default function PaywallScreen() {
           <Text style={styles.legalText}>
             {"Cancel anytime · Billed " + (selectedPlan === "monthly" ? "monthly" : "annually")}
           </Text>
+
+          {errorMsg && (
+            <Text style={styles.errorText}>{errorMsg}</Text>
+          )}
+
+          <TouchableOpacity onPress={handleRestore} disabled={isLoading} style={styles.skipBtn}>
+            <Text style={styles.restoreText}>Restore purchases</Text>
+          </TouchableOpacity>
 
           <TouchableOpacity onPress={() => router.back()} style={styles.skipBtn}>
             <Text style={styles.skipText}>Maybe later</Text>
@@ -414,4 +443,6 @@ const styles = StyleSheet.create({
   legalText: { fontSize: 12, color: "#9CA3AF", fontWeight: "500", textAlign: "center" },
   skipBtn: { paddingVertical: 8, paddingHorizontal: 20 },
   skipText: { fontSize: 14, color: "#9CA3AF", fontWeight: "600" },
+  restoreText: { fontSize: 14, color: COLORS.primary, fontWeight: "600" },
+  errorText: { fontSize: 13, color: "#EF4444", fontWeight: "500", textAlign: "center" },
 });

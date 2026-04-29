@@ -5,10 +5,11 @@ import { useAuthStore } from "../src/store/authStore";
 import { useSubscriptionStore } from "../src/store/subscriptionStore";
 import { useProgressStore } from "../src/store/progressStore";
 
+
 // Root entry point — subscribes to Firebase Auth state and redirects accordingly
 export default function Index() {
   const { user, setUser } = useAuthStore();
-  const { loadSubscription } = useSubscriptionStore();
+  const { loadSubscription, initRevenueCat } = useSubscriptionStore();
   const { loadProgress } = useProgressStore();
 
   useEffect(() => {
@@ -42,7 +43,8 @@ export default function Index() {
           });
         }
 
-        // Load subscription status and progress in parallel
+        // Init RevenueCat then load subscription and progress
+        await initRevenueCat(fbUser.uid);
         await Promise.allSettled([
           loadSubscription(fbUser.uid),
           loadProgress(fbUser.uid),
