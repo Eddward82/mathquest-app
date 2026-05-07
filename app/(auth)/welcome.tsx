@@ -236,7 +236,7 @@ export default function WelcomeScreen() {
               <Text style={styles.pricingPrice}>$0</Text>
               <Text style={styles.pricingPer}>forever</Text>
               <View style={styles.pricingFeatures}>
-                {["5 lessons per day", "Basic progress tracking", "XP & streaks"].map((f) => (
+                {["5 lessons (lifetime)", "Basic progress tracking", "XP & streaks"].map((f) => (
                   <View key={f} style={styles.pricingFeatureRow}>
                     <Text style={styles.checkIcon}>✓</Text>
                     <Text style={styles.pricingFeatureText}>{f}</Text>
@@ -251,8 +251,8 @@ export default function WelcomeScreen() {
                 <Text style={styles.pricingBadgeText}>Best Value</Text>
               </View>
               <Text style={styles.pricingLabelPremium}>Premium</Text>
-              <Text style={styles.pricingPricePremium}>$4</Text>
-              <Text style={styles.pricingPerPremium}>/month (billed yearly)</Text>
+              <Text style={styles.pricingPricePremium}>$5.99</Text>
+              <Text style={styles.pricingPerPremium}>/month</Text>
               <View style={styles.pricingFeatures}>
                 {["Unlimited lessons", "Double XP rewards", "AI tutor help", "Exclusive badges", "Advanced analytics"].map((f) => (
                   <View key={f} style={styles.pricingFeatureRow}>
@@ -294,7 +294,7 @@ export default function WelcomeScreen() {
             &copy; 2026 MathQuest. All rights reserved.
           </Text>
           <Text style={styles.footerText}>
-            krislove79@gmail.com
+            support@smartbloomai.online
           </Text>
         </View>
       </ScrollView>

@@ -4,16 +4,20 @@ import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { scheduleDailyStreakReminder } from "../src/lib/notifications";
+import { useSubscriptionStore } from "../src/store/subscriptionStore";
 import "../src/styles/global.css";
 
 // Keep splash screen up until app is ready
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  const { initRevenueCat } = useSubscriptionStore();
+
   useEffect(() => {
     SplashScreen.hideAsync();
-    // Schedule daily streak reminder at 7 PM
     scheduleDailyStreakReminder(19, 0).catch(() => {});
+    // Initialize RevenueCat early so paywall works even before login
+    initRevenueCat("").catch(() => {});
   }, []);
 
   return (

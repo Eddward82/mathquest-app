@@ -20,7 +20,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { COLORS, BORDER_RADIUS } from "../../constants/theme";
-import { FREE_DAILY_LIMIT } from "../../store/subscriptionStore";
+import { FREE_LIFETIME_LIMIT } from "../../store/subscriptionStore";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -91,9 +91,9 @@ export const PaywallModal: React.FC<PaywallModalProps> = ({ visible, onClose }) 
               <Text style={styles.crownEmoji}>👑</Text>
             </Animated.View>
 
-            <Text style={styles.headerTitle}>Daily limit reached</Text>
+            <Text style={styles.headerTitle}>Free limit reached</Text>
             <Text style={styles.headerSub}>
-              Free users get {FREE_DAILY_LIMIT} lessons per day.{"\n"}
+              Free users get {FREE_LIFETIME_LIMIT} lessons total.{"\n"}
               Upgrade to keep learning without limits!
             </Text>
           </LinearGradient>

@@ -25,7 +25,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { useAuthStore } from "../../src/store/authStore";
 import { useProgressStore } from "../../src/store/progressStore";
-import { useSubscriptionStore, FREE_DAILY_LIMIT } from "../../src/store/subscriptionStore";
+import { useSubscriptionStore } from "../../src/store/subscriptionStore";
 import { getTodayChallenge, isChallengeCompleted } from "../../src/data/dailyChallenges";
 import { PaywallModal } from "../../src/components/subscription/PaywallModal";
 import { COLORS, BORDER_RADIUS } from "../../src/constants/theme";

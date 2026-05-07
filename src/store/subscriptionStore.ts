@@ -8,13 +8,9 @@ import Purchases, {
 import { Platform } from "react-native";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
-export const FREE_DAILY_LIMIT = 5;
+export const FREE_LIFETIME_LIMIT = 5;
 const RC_GOOGLE_KEY = "goog_fEskqSivLsiojXLGnkOyVVPtocp";
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-function todayString(): string {
-  return new Date().toISOString().split("T")[0];
-}
 
 function isPremiumFromCustomerInfo(info: CustomerInfo): boolean {
   return info.entitlements.active["premium"] !== undefined;
@@ -56,9 +52,8 @@ interface SubscriptionState {
   premiumExpiresAt: string | null;
   isInitialized: boolean;
 
-  // Daily usage tracking
-  lessonsStartedToday: number;
-  usageDate: string;
+  // Lifetime usage tracking
+  lessonsStartedTotal: number;
 
   // Actions
   initRevenueCat: (userId: string) => Promise<void>;
@@ -76,13 +71,12 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
   isPremium: false,
   premiumExpiresAt: null,
   isInitialized: false,
-  lessonsStartedToday: 0,
-  usageDate: todayString(),
+  lessonsStartedTotal: 0,
 
   initRevenueCat: async (userId) => {
     try {
       if (Platform.OS === "android") {
-        await Purchases.configure({ apiKey: RC_GOOGLE_KEY, appUserID: userId });
+        await Purchases.configure({ apiKey: RC_GOOGLE_KEY, appUserID: userId || undefined });
       }
       Purchases.setLogLevel(LOG_LEVEL.ERROR);
 
@@ -130,38 +124,29 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
         set({ isPremium, premiumExpiresAt });
       }
 
-      // Daily usage
+      // Lifetime usage
       const snap = await userDoc(userId).get();
       const data = snap.data() ?? {};
-      const today = todayString();
-      const savedDate: string = data.usage_date ?? today;
-      const savedCount: number = data.lessons_started_today ?? 0;
-      const lessonsStartedToday = savedDate === today ? savedCount : 0;
-      set({ lessonsStartedToday, usageDate: today });
+      const lessonsStartedTotal: number = data.lessons_started_total ?? 0;
+      set({ lessonsStartedTotal });
     } catch {
       // Offline — keep existing local state
     }
   },
 
   canStartLesson: () => {
-    const { isPremium, lessonsStartedToday, usageDate } = get();
+    const { isPremium, lessonsStartedTotal } = get();
     if (isPremium) return true;
-    const today = todayString();
-    const count = usageDate === today ? lessonsStartedToday : 0;
-    return count < FREE_DAILY_LIMIT;
+    return lessonsStartedTotal < FREE_LIFETIME_LIMIT;
   },
 
   recordLessonStarted: async (userId) => {
-    const today = todayString();
-    const { usageDate, lessonsStartedToday } = get();
-    const newCount = usageDate === today ? lessonsStartedToday + 1 : 1;
-    set({ lessonsStartedToday: newCount, usageDate: today });
+    const { lessonsStartedTotal } = get();
+    const newCount = lessonsStartedTotal + 1;
+    set({ lessonsStartedTotal: newCount });
     if (userId === "guest") return;
     try {
-      await userDoc(userId).update({
-        lessons_started_today: newCount,
-        usage_date: today,
-      });
+      await userDoc(userId).update({ lessons_started_total: newCount });
     } catch {
       // Offline — local state is still accurate
     }
@@ -187,8 +172,22 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
       const expiresAt =
         customerInfo.entitlements.active["premium"]?.expirationDate ?? null;
 
-      set({ isPremium, premiumExpiresAt: expiresAt });
-      return { success: isPremium };
+      // If entitlement is already active, update immediately
+      if (isPremium) {
+        set({ isPremium: true, premiumExpiresAt: expiresAt });
+        return { success: true };
+      }
+
+      // Entitlement not yet active (common in test mode) — poll once after 3s
+      await new Promise((resolve) => setTimeout(resolve, 3000));
+      const refreshed = await Purchases.getCustomerInfo();
+      const isPremiumRefreshed = isPremiumFromCustomerInfo(refreshed);
+      const expiresAtRefreshed =
+        refreshed.entitlements.active["premium"]?.expirationDate ?? null;
+      set({ isPremium: isPremiumRefreshed, premiumExpiresAt: expiresAtRefreshed });
+
+      // Treat purchase as success even if entitlement is delayed
+      return { success: true };
     } catch (e: any) {
       if (e.userCancelled) return { success: false };
       return { success: false, error: e.message ?? "Purchase failed" };
@@ -228,10 +227,8 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
   },
 
   remainingToday: () => {
-    const { isPremium, lessonsStartedToday, usageDate } = get();
+    const { isPremium, lessonsStartedTotal } = get();
     if (isPremium) return Infinity;
-    const today = todayString();
-    const used = usageDate === today ? lessonsStartedToday : 0;
-    return Math.max(0, FREE_DAILY_LIMIT - used);
+    return Math.max(0, FREE_LIFETIME_LIMIT - lessonsStartedTotal);
   },
 }));

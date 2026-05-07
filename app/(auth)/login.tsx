@@ -5,6 +5,7 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  Alert,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -15,7 +16,7 @@ import { TextInput } from "../../src/components/ui/TextInput";
 import { useAuthStore } from "../../src/store/authStore";
 
 export default function LoginScreen() {
-  const { signIn, signInWithGoogle, isLoading, error, clearError } = useAuthStore();
+  const { signIn, signInWithGoogle, resetPassword, isLoading, error, clearError } = useAuthStore();
   const [form, setForm] = useState({ email: "", password: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -32,19 +33,52 @@ export default function LoginScreen() {
     if (!validate()) return;
     await signIn(form.email, form.password);
     const store = useAuthStore.getState();
-    if (!store.error) {
-      router.replace("/(tabs)");
+    if (!store.error && store.user) {
+      if (!store.user.onboarding_completed && !store.user.goal) {
+        router.replace("/onboarding");
+      } else {
+        router.replace("/(tabs)");
+      }
     }
   };
 
   const isVerifyEmail = error === "verify_email";
+
+  const handleForgotPassword = () => {
+    if (!form.email.includes("@")) {
+      Alert.alert("Enter your email", "Type your email address in the field above, then tap Forgot password.");
+      return;
+    }
+    Alert.alert(
+      "Reset Password",
+      `We'll send a password reset link to ${form.email}`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Send",
+          onPress: async () => {
+            try {
+              await resetPassword(form.email);
+              Alert.alert("Email sent", "Check your inbox for the password reset link.");
+            } catch {
+              Alert.alert("Error", "Could not send reset email. Check the address and try again.");
+            }
+          },
+        },
+      ]
+    );
+  };
 
   const handleGoogleSignIn = async () => {
     clearError();
     await signInWithGoogle();
     const store = useAuthStore.getState();
     if (!store.error && store.user) {
-      router.replace("/(tabs)");
+      if (!store.user.onboarding_completed && !store.user.goal) {
+        router.replace("/onboarding");
+      } else {
+        router.replace("/(tabs)");
+      }
     }
   };
 
@@ -74,7 +108,7 @@ export default function LoginScreen() {
           <View style={styles.verifyBanner}>
             <Feather name="mail" size={16} color="#0369A1" />
             <Text style={styles.verifyBannerText}>
-              A verification email has been sent. Please check your inbox and verify your email before signing in.
+              A verification email has been sent. Please check your inbox (and your Spam or Junk folder) and verify your email before signing in.
             </Text>
           </View>
         )}
@@ -110,7 +144,7 @@ export default function LoginScreen() {
           />
         </View>
 
-        <TouchableOpacity style={styles.forgotBtn}>
+        <TouchableOpacity style={styles.forgotBtn} onPress={handleForgotPassword}>
           <Text style={styles.forgotText}>Forgot password?</Text>
         </TouchableOpacity>
 

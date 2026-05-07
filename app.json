@@ -2,7 +2,7 @@
   "expo": {
     "name": "MathQuest",
     "slug": "mathquest",
-    "version": "1.0.0",
+    "version": "1.1.6",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "mathquest",
@@ -12,7 +12,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#4C35DE"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.mathquestapp.learn",
@@ -27,8 +29,8 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.mathquestapp.learn",
-      "googleServicesFile": "./google-services.json",
-      "versionCode": 2,
+      "googleServicesFile": "./android/app/google-services.json",
+      "versionCode": 16,
       "permissions": [
         "android.permission.INTERNET",
         "android.permission.RECEIVE_BOOT_COMPLETED",
@@ -53,6 +55,14 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "152ddbd4-7bc3-47fb-a371-603dabf4064b"
+      }
     }
   }
 }

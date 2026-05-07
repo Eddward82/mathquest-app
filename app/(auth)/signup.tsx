@@ -52,7 +52,11 @@ export default function SignupScreen() {
     await signInWithGoogle();
     const store = useAuthStore.getState();
     if (!store.error && store.user) {
-      router.replace("/onboarding");
+      if (!store.user.onboarding_completed && !store.user.goal) {
+        router.replace("/onboarding");
+      } else {
+        router.replace("/(tabs)");
+      }
     }
   };
 

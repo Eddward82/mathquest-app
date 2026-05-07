@@ -49,6 +49,9 @@ export default function LessonScreen() {
   const lessonStartTime = React.useRef(Date.now());
   const { canStartLesson, recordLessonStarted, isPremium } = useSubscriptionStore();
 
+  // Synchronous gate — checked before any render or effect
+  const allowed = canStartLesson();
+
   const {
     activeLesson, currentStepIndex, correctAnswers, mistakes,
     xpEarned, isComplete, showAIHelp, aiHelpContext,
@@ -67,8 +70,7 @@ export default function LessonScreen() {
   const xpStyle = useAnimatedStyle(() => ({ transform: [{ scale: xpScale.value }] }));
 
   useEffect(() => {
-    // Gate: if limit hit (e.g. direct navigation), send back to learn
-    if (!canStartLesson()) {
+    if (!allowed) {
       router.replace("/(tabs)/learn");
       return;
     }

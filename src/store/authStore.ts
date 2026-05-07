@@ -21,6 +21,8 @@ interface AuthState {
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
+  deleteAccount: () => Promise<void>;
+  resetPassword: (email: string) => Promise<void>;
   updateSkillLevel: (level: SkillLevel) => Promise<void>;
   updateOnboarding: (data: { goal: UserGoal; daily_target_minutes: number; focus_topics: TopicCategory[] }) => Promise<void>;
   setUser: (user: User | null) => void;
@@ -141,7 +143,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       const snap = await userDoc(fbUser.uid).get();
       if (snap.exists) {
-        set({ user: snap.data() as User, isGuest: false });
+        const data = snap.data() as User;
+        set({ user: data, isGuest: false });
       } else {
         const username = fbUser.displayName ?? fbUser.email?.split("@")[0] ?? "User";
         const profile: User = {
@@ -185,6 +188,23 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
+  deleteAccount: async () => {
+    const { user } = get();
+    if (!user) return;
+    set({ isLoading: true });
+    try {
+      await userDoc(user.id).delete();
+      await auth().currentUser?.delete();
+      set({ user: null, isGuest: false });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+
+  resetPassword: async (email) => {
+    await auth().sendPasswordResetEmail(email);
+  },
 
   updateSkillLevel: async (level) => {
     const { user, isGuest } = get();
@@ -196,10 +216,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   updateOnboarding: async ({ goal, daily_target_minutes, focus_topics }) => {
     const { user, isGuest } = get();
     if (!user) return;
-    const updated = { ...user, goal, daily_target_minutes, focus_topics };
+    const updated = { ...user, goal, daily_target_minutes, focus_topics, onboarding_completed: true };
     set({ user: updated });
     if (!isGuest) {
-      await userDoc(user.id).update({ goal, daily_target_minutes, focus_topics });
+      await userDoc(user.id).update({ goal, daily_target_minutes, focus_topics, onboarding_completed: true });
     }
   },
 
