@@ -296,15 +296,15 @@ const ReviewComplete: React.FC<ReviewCompleteProps> = ({
 
       {/* Stats */}
       <View style={styles.statsRow}>
-        <StatBox emoji="✅" label="Correct" value={`${score}/${total}`} color="#16A34A" bg="#F0FDF4" border="#86EFAC" />
+        <StatBox emoji="✅" label="Correct" value={`${score}/${total}`} color="#6BCB77" bg="rgba(107,203,119,0.10)" border="rgba(107,203,119,0.3)" />
         <StatBox emoji="🎯" label="Accuracy" value={`${accuracy}%`} color={COLORS.primary} bg="#EDE9FF" border="#C4B5FD" />
-        <StatBox emoji="❌" label="Mistakes" value={`${mistakes}`} color="#DC2626" bg="#FFF1F2" border="#FCA5A5" />
+        <StatBox emoji="❌" label="Mistakes" value={`${mistakes}`} color="#FF595E" bg="rgba(255,89,94,0.10)" border="rgba(255,89,94,0.3)" />
       </View>
 
       {/* Pass indicator */}
-      <View style={[styles.passBanner, { backgroundColor: passed ? "#F0FDF4" : "#FFF1F2", borderColor: passed ? "#86EFAC" : "#FCA5A5" }]}>
+      <View style={[styles.passBanner, { backgroundColor: passed ? "rgba(107,203,119,0.10)" : "rgba(255,89,94,0.10)", borderColor: passed ? "rgba(107,203,119,0.3)" : "rgba(255,89,94,0.3)" }]}>
         <Feather name={passed ? "check-circle" : "info"} size={16} color={passed ? "#16A34A" : "#DC2626"} />
-        <Text style={[styles.passBannerText, { color: passed ? "#16A34A" : "#DC2626" }]}>
+        <Text style={[styles.passBannerText, { color: passed ? "#6BCB77" : "#FF595E" }]}>
           {passed ? `Passed! Score: ${score}/${total} (pass mark: ${PASS_MARK}/${total})` : `Score: ${score}/${total} — Need ${PASS_MARK} to pass`}
         </Text>
       </View>
@@ -344,22 +344,22 @@ const StatBox: React.FC<{ emoji: string; label: string; value: string; color: st
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#F4F5FF" },
+  safe: { flex: 1, backgroundColor: "#0A0C1E" },
   center: { flex: 1, alignItems: "center", justifyContent: "center", gap: 16 },
-  errorText: { fontSize: 15, color: "#6B7280", fontWeight: "600" },
+  errorText: { fontSize: 15, color: "#6B7494", fontWeight: "600" },
   backBtn: { backgroundColor: COLORS.primary, borderRadius: 12, paddingHorizontal: 20, paddingVertical: 10 },
-  backBtnText: { color: "#FFFFFF", fontWeight: "700" },
+  backBtnText: { color: "#0A0C1E", fontWeight: "700" },
   emptyContainer: { flex: 1, alignItems: "center", justifyContent: "center", gap: 16, paddingHorizontal: 32 },
   emptyIconCircle: {
     width: 110, height: 110, borderRadius: 55,
-    backgroundColor: "#EEF2FF", alignItems: "center", justifyContent: "center",
-    borderWidth: 2, borderColor: "#C7D2FE",
-    shadowColor: COLORS.primary, shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15, shadowRadius: 14, elevation: 6,
+    backgroundColor: "#171A30", alignItems: "center", justifyContent: "center",
+    borderWidth: 2, borderColor: "#252848",
+    shadowColor: "#000", shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3, shadowRadius: 14, elevation: 6,
   },
   emptyEmoji: { fontSize: 52 },
-  emptyTitle: { fontSize: 20, fontWeight: "900", color: "#111827", textAlign: "center" },
-  emptyDesc: { fontSize: 14, color: "#6B7280", textAlign: "center", lineHeight: 21 },
+  emptyTitle: { fontSize: 20, fontWeight: "900", color: "#E8EDF5", textAlign: "center" },
+  emptyDesc: { fontSize: 14, color: "#6B7494", textAlign: "center", lineHeight: 21 },
   emptyBtnWrap: { borderRadius: 14, overflow: "hidden", marginTop: 4 },
   emptyBtn: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 24, paddingVertical: 13 },
   emptyBtnText: { fontSize: 15, fontWeight: "800", color: "#FFFFFF" },
@@ -372,21 +372,22 @@ const styles = StyleSheet.create({
   },
   quitBtn: {
     width: 36, height: 36, borderRadius: 12,
-    backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center",
-    borderWidth: 1.5, borderColor: "#E2E8F0",
+    backgroundColor: "#171A30", alignItems: "center", justifyContent: "center",
+    borderWidth: 1.5, borderColor: "#252848",
   },
   titleBox: { flex: 1 },
+  headerTitle: { fontSize: 15, fontWeight: "800", color: "#E8EDF5" },
   reviewLabel: { fontSize: 10, fontWeight: "800", color: COLORS.primary, letterSpacing: 1 },
-  topicName: { fontSize: 15, fontWeight: "800", color: "#111827" },
+  topicName: { fontSize: 15, fontWeight: "800", color: "#E8EDF5" },
   xpPill: {
     flexDirection: "row", alignItems: "center", gap: 4,
-    backgroundColor: "#FEFCE8", borderWidth: 1.5, borderColor: "#FDE68A",
+    backgroundColor: "rgba(255,202,58,0.10)", borderWidth: 1.5, borderColor: "rgba(255,202,58,0.25)",
     paddingHorizontal: 10, paddingVertical: 5, borderRadius: 99,
   },
   xpEmoji: { fontSize: 12 },
-  xpCount: { color: "#92400E", fontWeight: "900", fontSize: 13 },
+  xpCount: { color: "#FFCA3A", fontWeight: "900", fontSize: 13 },
 
-  progressTrack: { marginHorizontal: 16, height: 7, backgroundColor: "#E2E8F0", borderRadius: 99, overflow: "hidden" },
+  progressTrack: { marginHorizontal: 16, height: 7, backgroundColor: "#252848", borderRadius: 99, overflow: "hidden" },
   progressFill: { height: "100%", borderRadius: 99, overflow: "hidden", minWidth: 7 },
 
   stepMeta: {
@@ -395,7 +396,7 @@ const styles = StyleSheet.create({
   },
   qTypePill: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 99, borderWidth: 1 },
   qTypeText: { fontSize: 12, fontWeight: "700" },
-  stepCounter: { fontSize: 12, fontWeight: "700", color: "#9CA3AF" },
+  stepCounter: { fontSize: 12, fontWeight: "700", color: "#363B6B" },
 
   body: { flex: 1, paddingHorizontal: 16 },
   bodyContent: { paddingTop: 8, paddingBottom: 32, gap: 16 },
@@ -414,17 +415,17 @@ const styles = StyleSheet.create({
   badgeLabelText: { color: "#FFFFFF", fontSize: 11, fontWeight: "800" },
 
   completeTextArea: { alignItems: "center", gap: 4 },
-  completeTitle: { fontSize: 28, fontWeight: "900", color: "#111827", letterSpacing: -0.5 },
+  completeTitle: { fontSize: 28, fontWeight: "900", color: "#E8EDF5", letterSpacing: -0.5 },
   completeTopicName: { fontSize: 14, color: COLORS.primary, fontWeight: "700" },
-  completeMessage: { fontSize: 14, color: "#6B7280", textAlign: "center", lineHeight: 20 },
+  completeMessage: { fontSize: 14, color: "#6B7494", textAlign: "center", lineHeight: 20 },
 
   xpBadge: {
     flexDirection: "row", alignItems: "center", gap: 8, alignSelf: "center",
-    backgroundColor: "#FEFCE8", borderWidth: 2, paddingHorizontal: 20, paddingVertical: 11,
-    borderRadius: 99,
+    backgroundColor: "rgba(255,202,58,0.10)", borderWidth: 2, borderColor: "rgba(255,202,58,0.3)",
+    paddingHorizontal: 20, paddingVertical: 11, borderRadius: 99,
   },
   xpBadgeEmoji: { fontSize: 18 },
-  xpBadgeText: { fontSize: 16, fontWeight: "900", color: "#92400E" },
+  xpBadgeText: { fontSize: 16, fontWeight: "900", color: "#FFCA3A" },
 
   statsRow: { flexDirection: "row", gap: 10 },
   statBox: {
@@ -433,7 +434,7 @@ const styles = StyleSheet.create({
   },
   statEmoji: { fontSize: 18 },
   statValue: { fontSize: 20, fontWeight: "900", letterSpacing: -0.5 },
-  statLabel: { fontSize: 10, color: "#6B7280", fontWeight: "600", textTransform: "uppercase" },
+  statLabel: { fontSize: 10, color: "#6B7494", fontWeight: "600", textTransform: "uppercase" },
 
   passBanner: {
     flexDirection: "row", alignItems: "center", gap: 8,
@@ -453,5 +454,5 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25, shadowRadius: 12, elevation: 7,
   },
   continueBtn: { paddingVertical: 16, alignItems: "center" },
-  continueBtnText: { color: "#FFFFFF", fontWeight: "800", fontSize: 16 },
+  continueBtnText: { color: "#0A0C1E", fontWeight: "800", fontSize: 16 },
 });

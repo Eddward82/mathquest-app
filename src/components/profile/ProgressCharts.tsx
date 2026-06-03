@@ -206,13 +206,13 @@ const styles = StyleSheet.create({
   barEmoji: { fontSize: 20, width: 28, textAlign: "center" },
   barInfo: { flex: 1, gap: 4 },
   barLabelRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  barLabel: { fontSize: 13, fontWeight: "700", color: "#111827", flex: 1 },
+  barLabel: { fontSize: 13, fontWeight: "700", color: "#E8EDF5", flex: 1 },
   barPct: { fontSize: 12, fontWeight: "800", marginLeft: 8 },
-  barTrack: { height: 7, backgroundColor: "#F1F5F9", borderRadius: 99, overflow: "hidden" },
+  barTrack: { height: 7, backgroundColor: "#252848", borderRadius: 99, overflow: "hidden" },
   barFill: { height: "100%", borderRadius: 99, minWidth: 4 },
-  barSub: { fontSize: 10, color: "#9CA3AF", fontWeight: "600" },
+  barSub: { fontSize: 10, color: "#363B6B", fontWeight: "600" },
 
   emptyChart: { alignItems: "center", gap: 6, paddingVertical: 24 },
   emptyChartEmoji: { fontSize: 32 },
-  emptyChartText: { fontSize: 12, color: "#9CA3AF", textAlign: "center", fontWeight: "500" },
+  emptyChartText: { fontSize: 12, color: "#363B6B", textAlign: "center", fontWeight: "500" },
 });

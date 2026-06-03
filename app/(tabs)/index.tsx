@@ -114,7 +114,7 @@ export default function HomeScreen() {
         {/* ── Level / XP card ────────────────────────────────────────────── */}
         <Animated.View entering={FadeInDown.delay(80).springify()}>
           <LinearGradient
-            colors={["#5B4FE8", "#7C6FF7", "#9B8FF5"]}
+            colors={["#0E0B22", "#191432", "#1E1A3C"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.levelCard}
@@ -151,9 +151,9 @@ export default function HomeScreen() {
 
         {/* ── Stats row ──────────────────────────────────────────────────── */}
         <Animated.View entering={FadeInDown.delay(140).springify()} style={styles.statsRow}>
-          <StatCard icon="⚡" label="Total XP" value={totalXP.toLocaleString()} color="#6C63FF" bg="#EEF2FF" border="#C7D2FE" />
-          <StatCard icon="🔥" label="Streak" value={`${currentStreak}d`} color="#EA580C" bg="#FFF7ED" border="#FED7AA" />
-          <StatCard icon="✅" label="Lessons" value={lessonsCompleted.toString()} color="#16A34A" bg="#F0FDF4" border="#BBF7D0" />
+          <StatCard icon="⚡" label="Total XP" value={totalXP.toLocaleString()} color="#818CF8" bg="#171A30" border="#252848" />
+          <StatCard icon="🔥" label="Streak" value={`${currentStreak}d`} color="#FF9F1C" bg="#171A30" border="#252848" />
+          <StatCard icon="✅" label="Lessons" value={lessonsCompleted.toString()} color="#6BCB77" bg="#171A30" border="#252848" />
         </Animated.View>
 
         {/* ── Continue learning ──────────────────────────────────────────── */}
@@ -289,7 +289,7 @@ const DailyChallengeCard: React.FC<{ onPress: () => void }> = ({ onPress }) => {
         style={styles.challengeCard}
       >
         <LinearGradient
-          colors={["#D97706", "#F59E0B", "#FCD34D"]}
+          colors={["#92540A", "#D97706", "#FFCA3A"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.challengeGradient}
@@ -384,33 +384,33 @@ function shadeColor(hex: string, amount: number): string {
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#F4F5FF" },
+  safe: { flex: 1, backgroundColor: "#0A0C1E" },
   content: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 20, gap: 18 },
 
   // Header
   header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  greeting: { fontSize: 13, color: "#6B7280", fontWeight: "500", letterSpacing: 0.2 },
-  username: { fontSize: 24, fontWeight: "900", color: "#111827", letterSpacing: -0.5 },
+  greeting: { fontSize: 13, color: "#6B7494", fontWeight: "500", letterSpacing: 0.2 },
+  username: { fontSize: 24, fontWeight: "900", color: "#E8EDF5", letterSpacing: -0.5 },
   streakBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: "#FFF7ED",
+    backgroundColor: "rgba(255,159,28,0.1)",
     borderWidth: 1.5,
-    borderColor: "#FED7AA",
+    borderColor: "rgba(255,159,28,0.3)",
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: BORDER_RADIUS.full,
-    shadowColor: "#F97316",
+    shadowColor: "#FF9F1C",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.25,
     shadowRadius: 6,
     elevation: 3,
   },
-  streakBadgeInactive: { backgroundColor: "#F8FAFC", borderColor: "#E2E8F0" },
+  streakBadgeInactive: { backgroundColor: "#171A30", borderColor: "#252848" },
   streakFlame: { fontSize: 18 },
-  streakCount: { fontSize: 18, fontWeight: "900", color: "#EA580C" },
-  streakCountInactive: { color: "#94A3B8" },
+  streakCount: { fontSize: 18, fontWeight: "900", color: "#FF9F1C" },
+  streakCountInactive: { color: "#363B6B" },
 
   // Level card
   levelCard: {
@@ -418,59 +418,61 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 12,
     overflow: "hidden",
-    shadowColor: "#5B4FE8",
+    shadowColor: "#FFCA3A",
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.12,
     shadowRadius: 20,
     elevation: 10,
+    borderWidth: 1,
+    borderColor: "#252848",
   },
   levelOrb: {
     position: "absolute",
     top: -40,
     right: -30,
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: "rgba(255,255,255,0.06)",
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    backgroundColor: "rgba(255,202,58,0.05)",
   },
   levelOrb2: {
     position: "absolute",
-    bottom: -20,
-    left: -20,
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: "rgba(255,255,255,0.04)",
+    bottom: -30,
+    left: -30,
+    width: 110,
+    height: 110,
+    borderRadius: 55,
+    backgroundColor: "rgba(129,140,248,0.06)",
   },
   levelHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
   levelLeft: { gap: 2 },
-  levelEyebrow: { fontSize: 11, color: "rgba(255,255,255,0.65)", fontWeight: "700", letterSpacing: 1.2 },
-  levelName: { fontSize: 20, color: "#FFFFFF", fontWeight: "800", letterSpacing: -0.3 },
+  levelEyebrow: { fontSize: 11, color: "rgba(255,202,58,0.6)", fontWeight: "700", letterSpacing: 1.4 },
+  levelName: { fontSize: 20, color: "#E8EDF5", fontWeight: "800", letterSpacing: -0.3 },
   levelBadge: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: "rgba(255,255,255,0.18)",
+    backgroundColor: "rgba(255,202,58,0.12)",
     borderWidth: 1.5,
-    borderColor: "rgba(255,255,255,0.3)",
+    borderColor: "rgba(255,202,58,0.4)",
     alignItems: "center",
     justifyContent: "center",
   },
-  levelNum: { color: "#FFFFFF", fontWeight: "900", fontSize: 22 },
-  xpTrack: { height: 10, backgroundColor: "rgba(255,255,255,0.2)", borderRadius: 99, overflow: "hidden" },
-  xpFill: { height: "100%", backgroundColor: "#FFFFFF", borderRadius: 99, minWidth: 4 },
+  levelNum: { color: "#FFCA3A", fontWeight: "900", fontSize: 22 },
+  xpTrack: { height: 10, backgroundColor: "rgba(255,202,58,0.12)", borderRadius: 99, overflow: "hidden" },
+  xpFill: { height: "100%", backgroundColor: "#FFCA3A", borderRadius: 99, minWidth: 4 },
   xpShimmer: {
     position: "absolute",
     top: 0,
     right: 0,
     bottom: 0,
     width: 20,
-    backgroundColor: "rgba(255,255,255,0.4)",
+    backgroundColor: "rgba(255,255,255,0.25)",
     borderRadius: 99,
   },
   levelFooter: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  xpLabel: { fontSize: 12, color: "rgba(255,255,255,0.8)", fontWeight: "600" },
-  xpNext: { fontSize: 12, color: "rgba(255,255,255,0.6)", fontWeight: "500" },
+  xpLabel: { fontSize: 12, color: "rgba(255,202,58,0.8)", fontWeight: "600" },
+  xpNext: { fontSize: 12, color: "#6B7494", fontWeight: "500" },
 
   // Stats
   statsRow: { flexDirection: "row", gap: 10 },
@@ -482,18 +484,18 @@ const styles = StyleSheet.create({
     gap: 4,
     borderWidth: 1.5,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 3,
   },
   statIcon: { fontSize: 20 },
   statValue: { fontSize: 20, fontWeight: "900", letterSpacing: -0.5 },
-  statLabel: { fontSize: 10, color: "#9CA3AF", fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 },
+  statLabel: { fontSize: 10, color: "#6B7494", fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 },
 
   // Section
   sectionRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  sectionTitle: { fontSize: 18, fontWeight: "800", color: "#111827", letterSpacing: -0.3 },
+  sectionTitle: { fontSize: 18, fontWeight: "800", color: "#E8EDF5", letterSpacing: -0.3 },
   seeAllBtn: { flexDirection: "row", alignItems: "center", gap: 2 },
   seeAll: { fontSize: 13, color: COLORS.primary, fontWeight: "700" },
 
@@ -501,18 +503,18 @@ const styles = StyleSheet.create({
   continueCard: {
     borderRadius: 22,
     overflow: "hidden",
-    shadowColor: "#6C63FF",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.5,
     shadowRadius: 18,
-    elevation: 8,
+    elevation: 10,
   },
   continueGradient: { flexDirection: "row", alignItems: "center", padding: 20, gap: 14, overflow: "hidden" },
   continueOrb: { position: "absolute", top: -30, right: -20, width: 120, height: 120, borderRadius: 60 },
   continueLeft: { flex: 1, gap: 6 },
   upNextPill: {
     alignSelf: "flex-start",
-    backgroundColor: "rgba(255,255,255,0.22)",
+    backgroundColor: "rgba(255,255,255,0.2)",
     borderRadius: BORDER_RADIUS.full,
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -530,12 +532,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.3,
     shadowRadius: 6,
-    elevation: 4,
+    elevation: 5,
   },
   xpPill: {
-    backgroundColor: "rgba(255,255,255,0.2)",
+    backgroundColor: "rgba(255,255,255,0.18)",
     borderRadius: 99,
     paddingHorizontal: 10,
     paddingVertical: 5,
@@ -546,9 +548,9 @@ const styles = StyleSheet.create({
   challengeCard: {
     borderRadius: 22,
     overflow: "hidden",
-    shadowColor: "#D97706",
+    shadowColor: "#FFCA3A",
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
+    shadowOpacity: 0.2,
     shadowRadius: 14,
     elevation: 8,
   },
@@ -560,51 +562,51 @@ const styles = StyleSheet.create({
     width: 100,
     height: 100,
     borderRadius: 50,
-    backgroundColor: "rgba(255,255,255,0.1)",
+    backgroundColor: "rgba(255,255,255,0.08)",
   },
   challengeIconWrap: {
     width: 48,
     height: 48,
     borderRadius: 16,
-    backgroundColor: "rgba(255,255,255,0.25)",
+    backgroundColor: "rgba(0,0,0,0.2)",
     alignItems: "center",
     justifyContent: "center",
   },
   challengeEmoji: { fontSize: 26 },
   challengeContent: { flex: 1 },
-  challengeTitle: { color: "#FFFFFF", fontWeight: "800", fontSize: 16, letterSpacing: -0.2 },
-  challengeSub: { color: "rgba(255,255,255,0.85)", fontSize: 12, lineHeight: 17, marginTop: 3, fontWeight: "500" },
+  challengeTitle: { color: "#0A0C1E", fontWeight: "800", fontSize: 16, letterSpacing: -0.2 },
+  challengeSub: { color: "rgba(10,12,30,0.7)", fontSize: 12, lineHeight: 17, marginTop: 3, fontWeight: "600" },
   bonusPill: {
-    backgroundColor: "rgba(255,255,255,0.22)",
+    backgroundColor: "rgba(0,0,0,0.18)",
     borderRadius: 14,
     paddingHorizontal: 12,
     paddingVertical: 10,
     alignItems: "center",
   },
-  bonusLine1: { color: "#FFFFFF", fontWeight: "900", fontSize: 18, lineHeight: 20 },
-  bonusLine2: { color: "rgba(255,255,255,0.8)", fontWeight: "700", fontSize: 11 },
+  bonusLine1: { color: "#0A0C1E", fontWeight: "900", fontSize: 18, lineHeight: 20 },
+  bonusLine2: { color: "rgba(10,12,30,0.7)", fontWeight: "700", fontSize: 11 },
 
   // Topics
   topicsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
   topicCard: {
     width: (width - 52) / 2,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#171A30",
     borderRadius: 20,
     overflow: "hidden",
-    shadowColor: "#6C63FF",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.35,
     shadowRadius: 12,
-    elevation: 4,
+    elevation: 5,
     borderWidth: 1,
-    borderColor: "#F0EDFF",
+    borderColor: "#252848",
   },
   topicCardInner: { padding: 16, gap: 6 },
   topicIconWrap: { width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center" },
   topicEmoji: { fontSize: 22 },
-  topicTitle: { fontSize: 15, fontWeight: "800", color: "#111827", letterSpacing: -0.2 },
-  topicSub: { fontSize: 11, color: "#9CA3AF", fontWeight: "600" },
-  topicTrack: { height: 5, backgroundColor: "#F1F5F9", borderRadius: 99, overflow: "hidden" },
+  topicTitle: { fontSize: 15, fontWeight: "800", color: "#E8EDF5", letterSpacing: -0.2 },
+  topicSub: { fontSize: 11, color: "#6B7494", fontWeight: "600" },
+  topicTrack: { height: 5, backgroundColor: "#252848", borderRadius: 99, overflow: "hidden" },
   topicFill: { height: "100%", borderRadius: 99, minWidth: 2 },
   topicPct: { fontSize: 12, fontWeight: "800" },
 });

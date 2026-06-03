@@ -79,7 +79,7 @@ export default function DailyChallengeScreen() {
       <SafeAreaView style={styles.safe}>
         <View style={styles.headerBar}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-            <Feather name="arrow-left" size={20} color="#6B7280" />
+            <Feather name="arrow-left" size={20} color="#6B7494" />
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Daily Challenge</Text>
           <View style={{ width: 36 }} />
@@ -195,27 +195,27 @@ export default function DailyChallengeScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#F4F5FF" },
+  safe: { flex: 1, backgroundColor: "#0A0C1E" },
 
   headerBar: {
     flexDirection: "row", alignItems: "center", justifyContent: "space-between",
     paddingHorizontal: 16, paddingVertical: 12,
-    backgroundColor: "#FFFFFF",
-    borderBottomWidth: 1, borderBottomColor: "#F0EDFF",
+    backgroundColor: "#0A0C1E",
+    borderBottomWidth: 1, borderBottomColor: "#1C1F3B",
   },
   backBtn: {
     width: 36, height: 36, borderRadius: 18,
-    backgroundColor: "#F4F5FF", alignItems: "center", justifyContent: "center",
+    backgroundColor: "#171A30", alignItems: "center", justifyContent: "center",
   },
-  headerTitle: { fontSize: 16, fontWeight: "800", color: "#111827" },
+  headerTitle: { fontSize: 16, fontWeight: "800", color: "#E8EDF5" },
   xpPill: {
     flexDirection: "row", alignItems: "center", gap: 4,
-    backgroundColor: "#FEFCE8", borderRadius: 99,
+    backgroundColor: "rgba(255,202,58,0.10)", borderRadius: 99,
     paddingHorizontal: 10, paddingVertical: 5,
-    borderWidth: 1.5, borderColor: "#FDE68A",
+    borderWidth: 1.5, borderColor: "rgba(255,202,58,0.25)",
   },
   xpEmoji: { fontSize: 13 },
-  xpCount: { fontSize: 13, fontWeight: "900", color: "#92400E" },
+  xpCount: { fontSize: 13, fontWeight: "900", color: "#FFCA3A" },
 
   content: { padding: 16, gap: 16, paddingBottom: 40 },
 
@@ -252,8 +252,8 @@ const styles = StyleSheet.create({
     flexDirection: "row", alignItems: "flex-start", gap: 12,
     borderRadius: 16, padding: 16, borderWidth: 1.5,
   },
-  resultCorrect: { backgroundColor: "#F0FDF4", borderColor: "#86EFAC" },
-  resultWrong: { backgroundColor: "#FFF1F2", borderColor: "#FCA5A5" },
+  resultCorrect: { backgroundColor: "rgba(107,203,119,0.10)", borderColor: "rgba(107,203,119,0.35)" },
+  resultWrong: { backgroundColor: "rgba(255,89,94,0.10)", borderColor: "rgba(255,89,94,0.35)" },
   resultEmoji: { fontSize: 28 },
   resultText: { flex: 1, gap: 3 },
   resultTitle: { fontSize: 15, fontWeight: "800" },
@@ -265,8 +265,8 @@ const styles = StyleSheet.create({
     padding: 32, gap: 16,
   },
   doneEmoji: { fontSize: 64 },
-  doneTitle: { fontSize: 24, fontWeight: "900", color: "#111827", textAlign: "center" },
-  doneSub: { fontSize: 15, color: "#6B7280", textAlign: "center", lineHeight: 22 },
+  doneTitle: { fontSize: 24, fontWeight: "900", color: "#E8EDF5", textAlign: "center" },
+  doneSub: { fontSize: 15, color: "#6B7494", textAlign: "center", lineHeight: 22 },
   doneBtn: { borderRadius: 16, overflow: "hidden", marginTop: 8, width: "100%" },
   doneBtnGrad: { paddingVertical: 16, alignItems: "center" },
   doneBtnText: { color: "#FFFFFF", fontWeight: "800", fontSize: 16 },

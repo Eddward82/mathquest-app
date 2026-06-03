@@ -1,42 +1,48 @@
 export const COLORS = {
-  primary: "#6C63FF",
-  primaryLight: "#EEF2FF",
-  primaryDark: "#4640B8",
+  // Brand / accent
+  primary: "#FFCA3A",         // golden amber — XP, CTAs
+  primaryLight: "rgba(255,202,58,0.12)",
+  primaryDark: "#E5A800",
 
-  secondary: "#FF6B35",
-  secondaryLight: "#FFF7ED",
+  secondary: "#818CF8",       // indigo — levels, stats
+  secondaryLight: "rgba(129,140,248,0.12)",
 
-  success: "#58CC02",
-  successLight: "#F0FDF4",
-  successDark: "#16A34A",
+  success: "#6BCB77",         // mint green — correct answers
+  successLight: "rgba(107,203,119,0.12)",
+  successDark: "#3FB54A",
 
-  danger: "#FF4B4B",
-  dangerLight: "#FFF1F2",
-  dangerDark: "#DC2626",
+  danger: "#FF595E",          // coral red — wrong answers
+  dangerLight: "rgba(255,89,94,0.12)",
+  dangerDark: "#E02020",
 
-  gold: "#EAB308",
-  goldLight: "#FEF9C3",
+  gold: "#FFCA3A",
+  goldLight: "rgba(255,202,58,0.10)",
 
-  // Neutrals
+  // Streak
+  streak: "#FF9F1C",
+  streakLight: "rgba(255,159,28,0.12)",
+
+  // Backgrounds
   white: "#FFFFFF",
-  black: "#0A0A0A",
-  surface: "#F8F9FF",
-  card: "#FFFFFF",
+  black: "#0A0C1E",
+  surface: "#0A0C1E",         // page background — deep midnight
+  card: "#171A30",            // card surface
+  cardAlt: "#1E2038",         // elevated/hover card
 
   // Text
-  textPrimary: "#1A1A2E",
-  textSecondary: "#64748B",
-  textMuted: "#94A3B8",
+  textPrimary: "#E8EDF5",
+  textSecondary: "#6B7494",
+  textMuted: "#363B6B",
 
   // Borders
-  border: "#E2E8F0",
-  borderLight: "#F1F5F9",
+  border: "#252848",
+  borderLight: "#1C1F3B",
 
-  // Topic colors
-  arithmetic: "#6C63FF",
-  algebra: "#FF6B35",
-  geometry: "#58CC02",
-  word_problems: "#EAB308",
+  // Topic colors (vibrant for dark backgrounds)
+  arithmetic: "#818CF8",      // indigo
+  algebra: "#FB7185",         // rose
+  geometry: "#34D399",        // emerald
+  word_problems: "#FBBF24",   // amber
 } as const;
 
 export const FONTS = {
@@ -66,24 +72,24 @@ export const BORDER_RADIUS = {
 export const SHADOWS = {
   sm: {
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 3,
   },
   md: {
-    shadowColor: "#6C63FF",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.12,
+    shadowOpacity: 0.35,
     shadowRadius: 12,
-    elevation: 4,
+    elevation: 5,
   },
   lg: {
-    shadowColor: "#6C63FF",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.18,
+    shadowOpacity: 0.4,
     shadowRadius: 20,
-    elevation: 8,
+    elevation: 10,
   },
 } as const;
 

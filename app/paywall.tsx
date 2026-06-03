@@ -99,7 +99,7 @@ export default function PaywallScreen() {
         style={styles.closeBtn}
         hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
       >
-        <Feather name="x" size={20} color="#6B7280" />
+        <Feather name="x" size={20} color="#6B7494" />
       </TouchableOpacity>
 
       <ScrollView
@@ -265,7 +265,7 @@ const PlanCard: React.FC<{ plan: Plan; selected: boolean; onPress: () => void }>
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#F4F5FF" },
+  safe: { flex: 1, backgroundColor: "#0A0C1E" },
 
   closeBtn: {
     position: "absolute",
@@ -275,14 +275,16 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: "rgba(255,255,255,0.85)",
+    backgroundColor: "rgba(30,32,56,0.9)",
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 4,
+    borderWidth: 1,
+    borderColor: "#252848",
   },
 
   scroll: { paddingBottom: 16 },
@@ -333,7 +335,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: 17,
     fontWeight: "800",
-    color: "#111827",
+    color: "#E8EDF5",
     letterSpacing: -0.3,
   },
 
@@ -343,15 +345,15 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#171A30",
     borderRadius: 14,
     paddingVertical: 13,
     paddingHorizontal: 14,
     borderWidth: 1,
-    borderColor: "#EDE9FF",
-    shadowColor: "#6C63FF",
+    borderColor: "#252848",
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
+    shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 2,
   },
@@ -359,11 +361,11 @@ const styles = StyleSheet.create({
     width: 34,
     height: 34,
     borderRadius: 10,
-    backgroundColor: "#EDE9FF",
+    backgroundColor: "rgba(129,140,248,0.15)",
     alignItems: "center",
     justifyContent: "center",
   },
-  perkLabel: { flex: 1, fontSize: 14, fontWeight: "600", color: "#1F2937" },
+  perkLabel: { flex: 1, fontSize: 14, fontWeight: "600", color: "#E8EDF5" },
 
   // Plans
   plansRow: { flexDirection: "row", gap: 10 },
@@ -372,8 +374,8 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 14,
     borderWidth: 2,
-    borderColor: "#E2E8F0",
-    backgroundColor: "#FFFFFF",
+    borderColor: "#252848",
+    backgroundColor: "#171A30",
     alignItems: "center",
     gap: 4,
     minHeight: 110,
@@ -382,16 +384,16 @@ const styles = StyleSheet.create({
   },
   planCardSelected: {
     borderColor: COLORS.primary,
-    backgroundColor: "#EDE9FF",
+    backgroundColor: "rgba(255,202,58,0.08)",
     shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.25,
     shadowRadius: 12,
     elevation: 6,
   },
   planCardHighlight: {
-    borderColor: "#C4B5FD",
-    backgroundColor: "#F5F3FF",
+    borderColor: "rgba(129,140,248,0.4)",
+    backgroundColor: "rgba(129,140,248,0.08)",
   },
   badge: {
     position: "absolute",
@@ -401,7 +403,7 @@ const styles = StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 99,
   },
-  badgeText: { color: "#FFFFFF", fontSize: 10, fontWeight: "800" },
+  badgeText: { color: "#0A0C1E", fontSize: 10, fontWeight: "800" },
   checkCircle: {
     position: "absolute",
     top: 8,
@@ -413,11 +415,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  planLabel: { fontSize: 12, fontWeight: "700", color: "#6B7280" },
+  planLabel: { fontSize: 12, fontWeight: "700", color: "#6B7494" },
   planLabelSelected: { color: COLORS.primary },
-  planPrice: { fontSize: 20, fontWeight: "900", color: "#111827", letterSpacing: -0.5 },
+  planPrice: { fontSize: 20, fontWeight: "900", color: "#E8EDF5", letterSpacing: -0.5 },
   planPriceSelected: { color: COLORS.primary },
-  planPer: { fontSize: 11, fontWeight: "600", color: "#9CA3AF" },
+  planPer: { fontSize: 11, fontWeight: "600", color: "#363B6B" },
   planPerSelected: { color: COLORS.primary },
 
   // CTA
@@ -439,10 +441,10 @@ const styles = StyleSheet.create({
     gap: 10,
     paddingVertical: 18,
   },
-  ctaText: { color: "#FFFFFF", fontWeight: "900", fontSize: 17, letterSpacing: -0.2 },
-  legalText: { fontSize: 12, color: "#9CA3AF", fontWeight: "500", textAlign: "center" },
+  ctaText: { color: "#0A0C1E", fontWeight: "900", fontSize: 17, letterSpacing: -0.2 },
+  legalText: { fontSize: 12, color: "#363B6B", fontWeight: "500", textAlign: "center" },
   skipBtn: { paddingVertical: 8, paddingHorizontal: 20 },
-  skipText: { fontSize: 14, color: "#9CA3AF", fontWeight: "600" },
+  skipText: { fontSize: 14, color: "#363B6B", fontWeight: "600" },
   restoreText: { fontSize: 14, color: COLORS.primary, fontWeight: "600" },
-  errorText: { fontSize: 13, color: "#EF4444", fontWeight: "500", textAlign: "center" },
+  errorText: { fontSize: 13, color: "#FF595E", fontWeight: "500", textAlign: "center" },
 });

@@ -23,8 +23,8 @@ export const StreakBadge: React.FC<StreakBadgeProps> = ({ streak, size = "md" })
         styles.badge,
         {
           padding: config.padding,
-          backgroundColor: isActive ? "#FFF7ED" : "#F1F5F9",
-          borderColor: isActive ? "#FED7AA" : "#E2E8F0",
+          backgroundColor: isActive ? "rgba(255,159,28,0.12)" : "#1E2038",
+          borderColor: isActive ? "rgba(255,159,28,0.3)" : "#252848",
         },
       ]}
     >

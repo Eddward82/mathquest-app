@@ -63,7 +63,7 @@ export const ShareAchievementModal: React.FC<ShareAchievementModalProps> = ({
         <View style={styles.sheet}>
           {/* Close button */}
           <TouchableOpacity onPress={onClose} style={styles.closeBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-            <Feather name="x" size={20} color="#6B7280" />
+            <Feather name="x" size={20} color="#6B7494" />
           </TouchableOpacity>
 
           <Text style={styles.sheetTitle}>Achievement Unlocked! 🎉</Text>
@@ -156,19 +156,20 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   sheet: {
-    backgroundColor: "#F4F5FF",
+    backgroundColor: "#171A30",
     borderTopLeftRadius: 28, borderTopRightRadius: 28,
     padding: 24, paddingBottom: Platform.OS === "ios" ? 40 : 24,
     gap: 16, alignItems: "center",
+    borderTopWidth: 1, borderColor: "#252848",
   },
   closeBtn: {
     position: "absolute", top: 16, right: 20,
     width: 34, height: 34, borderRadius: 17,
-    backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center",
-    borderWidth: 1.5, borderColor: "#E2E8F0",
+    backgroundColor: "#1E2038", alignItems: "center", justifyContent: "center",
+    borderWidth: 1.5, borderColor: "#252848",
   },
-  sheetTitle: { fontSize: 20, fontWeight: "900", color: "#111827", textAlign: "center" },
-  sheetSub: { fontSize: 13, color: "#6B7280", fontWeight: "500", marginTop: -8 },
+  sheetTitle: { fontSize: 20, fontWeight: "900", color: "#E8EDF5", textAlign: "center" },
+  sheetSub: { fontSize: 13, color: "#6B7494", fontWeight: "500", marginTop: -8 },
 
   // Card
   cardWrapper: {
@@ -235,10 +236,10 @@ const styles = StyleSheet.create({
   btnRow: { flexDirection: "row", gap: 12, width: "100%" },
   skipBtn: {
     flex: 1, alignItems: "center", justifyContent: "center",
-    borderWidth: 2, borderColor: "#E2E8F0", borderRadius: 16,
+    borderWidth: 2, borderColor: "#252848", borderRadius: 16,
     paddingVertical: 14,
   },
-  skipBtnText: { fontSize: 15, fontWeight: "700", color: "#6B7280" },
+  skipBtnText: { fontSize: 15, fontWeight: "700", color: "#6B7494" },
   shareWrap: {
     flex: 2, borderRadius: 16, overflow: "hidden",
     shadowColor: COLORS.primary, shadowOffset: { width: 0, height: 4 },

@@ -134,9 +134,9 @@ export default function LeaderboardScreen() {
     <SafeAreaView style={styles.safe}>
       {/* Header */}
       <LinearGradient
-        colors={[COLORS.primary, "#8B5CF6"]}
+        colors={["#0E0B22", "#141030", "#1A153E"]}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 0 }}
+        end={{ x: 1, y: 1 }}
         style={styles.header}
       >
         <Text style={styles.headerTitle}>Leaderboard</Text>
@@ -162,7 +162,7 @@ export default function LeaderboardScreen() {
           <Text style={styles.emptyTitle}>Be the first on the board!</Text>
           <Text style={styles.emptySub}>No one has earned XP yet. Complete lessons to claim the #1 spot.</Text>
           <TouchableOpacity onPress={() => router.replace("/(tabs)/learn")} style={styles.emptyBtn}>
-            <LinearGradient colors={[COLORS.primary, "#8B5CF6"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.emptyBtnGrad}>
+            <LinearGradient colors={["#4F46E5", "#7C3AED"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.emptyBtnGrad}>
               <Feather name="book-open" size={15} color="#FFFFFF" />
               <Text style={styles.emptyBtnText}>Start Learning</Text>
             </LinearGradient>
@@ -190,7 +190,7 @@ export default function LeaderboardScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#F4F5FF" },
+  safe: { flex: 1, backgroundColor: "#0A0C1E" },
 
   header: {
     paddingHorizontal: 20,
@@ -198,33 +198,37 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
     alignItems: "center",
     gap: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: "#1C1F3B",
   },
-  headerTitle: { fontSize: 24, fontWeight: "900", color: "#FFFFFF", letterSpacing: 0.3 },
-  headerSub: { fontSize: 13, color: "rgba(255,255,255,0.75)", fontWeight: "600" },
+  headerTitle: { fontSize: 24, fontWeight: "900", color: "#E8EDF5", letterSpacing: 0.3 },
+  headerSub: { fontSize: 13, color: "#6B7494", fontWeight: "600" },
   myRankBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "rgba(255,202,58,0.12)",
     borderRadius: 99,
     paddingHorizontal: 14,
     paddingVertical: 6,
     marginTop: 10,
+    borderWidth: 1,
+    borderColor: "rgba(255,202,58,0.25)",
   },
   myRankText: { fontSize: 13, fontWeight: "800", color: COLORS.primary },
 
-  loader: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12 },
-  loaderText: { fontSize: 14, color: "#6B7280", fontWeight: "600" },
+  loader: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12, backgroundColor: "#0A0C1E" },
+  loaderText: { fontSize: 14, color: "#6B7494", fontWeight: "600" },
 
-  empty: { flex: 1, alignItems: "center", justifyContent: "center", gap: 14, paddingHorizontal: 32 },
+  empty: { flex: 1, alignItems: "center", justifyContent: "center", gap: 14, paddingHorizontal: 32, backgroundColor: "#0A0C1E" },
   emptyIconCircle: {
     width: 100, height: 100, borderRadius: 50,
-    backgroundColor: "#EEF2FF", alignItems: "center", justifyContent: "center",
-    borderWidth: 2, borderColor: "#C7D2FE",
+    backgroundColor: "#171A30", alignItems: "center", justifyContent: "center",
+    borderWidth: 2, borderColor: "#252848",
   },
   emptyEmoji: { fontSize: 48 },
-  emptyTitle: { fontSize: 20, fontWeight: "900", color: "#111827", textAlign: "center" },
-  emptySub: { fontSize: 14, color: "#6B7280", fontWeight: "500", textAlign: "center", lineHeight: 21 },
+  emptyTitle: { fontSize: 20, fontWeight: "900", color: "#E8EDF5", textAlign: "center" },
+  emptySub: { fontSize: 14, color: "#6B7494", fontWeight: "500", textAlign: "center", lineHeight: 21 },
   emptyBtn: { borderRadius: 14, overflow: "hidden", marginTop: 4 },
   emptyBtnGrad: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 24, paddingVertical: 13 },
   emptyBtnText: { fontSize: 15, fontWeight: "800", color: "#FFFFFF" },
@@ -234,21 +238,23 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#171A30",
     borderRadius: 16,
     paddingHorizontal: 14,
     paddingVertical: 12,
     gap: 12,
+    borderWidth: 1,
+    borderColor: "#252848",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
     shadowRadius: 6,
     elevation: 2,
   },
   rowMe: {
     borderWidth: 2,
     borderColor: COLORS.primary,
-    backgroundColor: "#EEF2FF",
+    backgroundColor: "rgba(255,202,58,0.06)",
   },
 
   rankBox: { width: 28, alignItems: "center" },
@@ -258,29 +264,29 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#E2E8F0",
+    backgroundColor: "#252848",
     alignItems: "center",
     justifyContent: "center",
   },
   avatarMe: { backgroundColor: COLORS.primary },
-  avatarText: { fontSize: 17, fontWeight: "800", color: "#374151" },
+  avatarText: { fontSize: 17, fontWeight: "800", color: "#E8EDF5" },
 
   nameCol: { flex: 1 },
-  name: { fontSize: 14, fontWeight: "700", color: "#1F2937" },
+  name: { fontSize: 14, fontWeight: "700", color: "#E8EDF5" },
   nameMe: { color: COLORS.primary },
-  levelLabel: { fontSize: 11, color: "#9CA3AF", fontWeight: "600", marginTop: 2 },
+  levelLabel: { fontSize: 11, color: "#6B7494", fontWeight: "600", marginTop: 2 },
 
   xpPill: {
     flexDirection: "row",
     alignItems: "center",
     gap: 3,
-    backgroundColor: "#FEFCE8",
+    backgroundColor: "rgba(255,202,58,0.10)",
     borderWidth: 1.5,
-    borderColor: "#FDE68A",
+    borderColor: "rgba(255,202,58,0.25)",
     paddingHorizontal: 10,
     paddingVertical: 5,
     borderRadius: 99,
   },
   xpEmoji: { fontSize: 11 },
-  xpNum: { fontSize: 13, fontWeight: "900", color: "#92400E" },
+  xpNum: { fontSize: 13, fontWeight: "900", color: COLORS.primary },
 });
