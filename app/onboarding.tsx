@@ -252,7 +252,7 @@ export default function OnboardingScreen() {
             style={styles.cta}
           >
             <Text style={styles.ctaText}>
-              {step < TOTAL_STEPS - 1 ? "Continue →" : "Start Learning! 🚀"}
+              {step < TOTAL_STEPS - 1 ? "Continue" : "Start Learning!"}
             </Text>
           </LinearGradient>
         </TouchableOpacity>

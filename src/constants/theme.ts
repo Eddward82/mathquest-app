@@ -87,7 +87,7 @@ export const SHADOWS = {
   },
 } as const;
 
-// XP required per level
+// XP required to advance one level (linear progression curve)
 export const XP_PER_LEVEL = 500;
 
 export const LEVEL_NAMES: Record<number, string> = {

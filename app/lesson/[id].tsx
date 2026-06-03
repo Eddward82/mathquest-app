@@ -70,6 +70,11 @@ export default function LessonScreen() {
   const xpStyle = useAnimatedStyle(() => ({ transform: [{ scale: xpScale.value }] }));
 
   useEffect(() => {
+    if (!user) {
+      router.replace("/(auth)/welcome");
+      return;
+    }
+
     if (!allowed) {
       router.replace("/(tabs)/learn");
       return;
@@ -117,7 +122,7 @@ export default function LessonScreen() {
   const handleCorrect = useCallback(() => {
     recordCorrect();
     if (activeLesson) {
-      const qCount = activeLesson.steps.filter((s) => s.type !== "explanation").length;
+      const qCount = activeLesson.steps?.filter((s) => s.type !== "explanation").length ?? 1;
       addXP(Math.floor(activeLesson.xp_reward / Math.max(qCount, 1)));
     }
   }, [activeLesson]);
@@ -169,10 +174,10 @@ export default function LessonScreen() {
     );
   }
 
-  const totalSteps = activeLesson.steps.length;
-  const questionSteps = activeLesson.steps.filter((s) => s.type !== "explanation").length;
+  const totalSteps = activeLesson.steps?.length ?? 0;
+  const questionSteps = activeLesson.steps?.filter((s) => s.type !== "explanation").length ?? 0;
   const isExplain = currentStep.type === "explanation";
-  const stepDots = activeLesson.steps.map((s, i) => ({ type: s.type, isCurrent: i === currentStepIndex, isDone: i < currentStepIndex }));
+  const stepDots = activeLesson.steps?.map((s, i) => ({ type: s.type, isCurrent: i === currentStepIndex, isDone: i < currentStepIndex })) ?? [];
 
   return (
     <SafeAreaView style={styles.safe}>

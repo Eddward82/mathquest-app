@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   View,
   Text,
@@ -44,6 +44,12 @@ interface AIHelpModalProps {
 }
 
 type Status = "idle" | "loading" | "streaming" | "done" | "error";
+
+const AI_COOLDOWN_MS = 5000;
+
+function sanitizeQuestion(input: string): string {
+  return input.replace(/["""''`]/g, "'").slice(0, 500).trim();
+}
 
 // ── Dot loader ────────────────────────────────────────────────────────────────
 const Dot: React.FC<{ delay: number }> = ({ delay }) => {
@@ -139,6 +145,7 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
   const [data, setData] = useState<ExplanationData | null>(null);
   const [streamText, setStreamText] = useState("");
   const abortRef = useRef<AbortController | null>(null);
+  const lastFetchRef = useRef<number>(0);
 
   const sheetY = useSharedValue(SCREEN_HEIGHT);
   const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: sheetY.value }] }));
@@ -158,6 +165,11 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
   }, [visible, question]);
 
   const fetchExplanation = async () => {
+    // Rate limit: prevent spamming
+    const now = Date.now();
+    if (now - lastFetchRef.current < AI_COOLDOWN_MS && status === "done") return;
+    lastFetchRef.current = now;
+
     abortRef.current?.abort();
     const controller = new AbortController();
     abortRef.current = controller;
@@ -167,6 +179,7 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
     setStreamText("");
 
     const apiKey = process.env.EXPO_PUBLIC_OPENAI_KEY;
+    const safeQuestion = sanitizeQuestion(question);
 
     try {
       if (!apiKey) throw new Error("No API key");
@@ -199,7 +212,7 @@ Use at most 5 steps. Be simple, warm, and encouraging.`,
             },
             {
               role: "user",
-              content: `Explain how to solve this maths question step by step: "${question}"`,
+              content: `Explain how to solve this maths question step by step: "${safeQuestion}"`,
             },
           ],
         }),

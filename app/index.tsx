@@ -5,6 +5,7 @@ import { auth, userDoc } from "../src/lib/firebase";
 import { useAuthStore } from "../src/store/authStore";
 import { useSubscriptionStore } from "../src/store/subscriptionStore";
 import { useProgressStore } from "../src/store/progressStore";
+import { User } from "../src/types";
 
 // Root entry point — subscribes to Firebase Auth state and redirects accordingly
 export default function Index() {
@@ -20,7 +21,7 @@ export default function Index() {
         try {
           const snap = await userDoc(fbUser.uid).get();
           if (snap.exists) {
-            setUser(snap.data() as any);
+            setUser(snap.data() as User);
           } else {
             setUser({
               id: fbUser.uid,

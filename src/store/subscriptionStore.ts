@@ -10,7 +10,10 @@ import { Platform } from "react-native";
 // ─── Constants ────────────────────────────────────────────────────────────────
 export const FREE_LIFETIME_LIMIT = 5;
 const RC_GOOGLE_KEY = "goog_fEskqSivLsiojXLGnkOyVVPtocp";
+const ENTITLEMENT_POLL_DELAY_MS = 3000;
 
+// Module-level listener reference so it can be removed before re-adding
+let customerInfoListener: (info: CustomerInfo) => void = () => {};
 
 function isPremiumFromCustomerInfo(info: CustomerInfo): boolean {
   return info.entitlements.active["premium"] !== undefined;
@@ -80,24 +83,25 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
       }
       Purchases.setLogLevel(LOG_LEVEL.ERROR);
 
-      // Listen for customer info updates
-      Purchases.addCustomerInfoUpdateListener((info) => {
+      // Remove previous listener before adding a new one to prevent duplicates
+      Purchases.removeCustomerInfoUpdateListener(customerInfoListener);
+      customerInfoListener = (info) => {
         const isPremium = isPremiumFromCustomerInfo(info);
         const expiresAt =
           info.entitlements.active["premium"]?.expirationDate ?? null;
         set({ isPremium, premiumExpiresAt: expiresAt });
 
-        // Sync to Firestore
         if (userId && userId !== "guest") {
           userDoc(userId)
             .update({ is_premium: isPremium, premium_expires_at: expiresAt })
             .catch(() => {});
         }
-      });
+      };
+      Purchases.addCustomerInfoUpdateListener(customerInfoListener);
 
       set({ isInitialized: true });
     } catch (e) {
-      console.error("RevenueCat init error:", e);
+      // Silent — RevenueCat unavailable
     }
   },
 
@@ -105,7 +109,10 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
     if (userId === "guest") return;
 
     try {
-      // Load from RevenueCat if initialized
+      // Single Firestore fetch reused for both premium fallback and lifetime usage
+      const snap = await userDoc(userId).get();
+      const data = snap.data() ?? {};
+
       const { isInitialized } = get();
       if (isInitialized) {
         const info = await Purchases.getCustomerInfo();
@@ -115,8 +122,6 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
         set({ isPremium, premiumExpiresAt: expiresAt });
       } else {
         // Fallback to Firestore
-        const snap = await userDoc(userId).get();
-        const data = snap.data() ?? {};
         const premiumExpiresAt: string | null = data.premium_expires_at ?? null;
         const isPremium =
           data.is_premium === true &&
@@ -124,9 +129,6 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
         set({ isPremium, premiumExpiresAt });
       }
 
-      // Lifetime usage
-      const snap = await userDoc(userId).get();
-      const data = snap.data() ?? {};
       const lessonsStartedTotal: number = data.lessons_started_total ?? 0;
       set({ lessonsStartedTotal });
     } catch {
@@ -179,7 +181,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
       }
 
       // Entitlement not yet active (common in test mode) — poll once after 3s
-      await new Promise((resolve) => setTimeout(resolve, 3000));
+      await new Promise((resolve) => setTimeout(resolve, ENTITLEMENT_POLL_DELAY_MS));
       const refreshed = await Purchases.getCustomerInfo();
       const isPremiumRefreshed = isPremiumFromCustomerInfo(refreshed);
       const expiresAtRefreshed =

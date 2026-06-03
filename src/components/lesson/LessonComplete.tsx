@@ -258,7 +258,7 @@ export const LessonComplete: React.FC<LessonCompleteProps> = ({
       {/* CTA */}
       <Animated.View entering={FadeInDown.delay(900).springify()}>
         <Button
-          title="Continue →"
+          title="Continue"
           onPress={onContinue}
           variant="primary"
           fullWidth

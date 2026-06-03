@@ -6,8 +6,10 @@ import {
   statusCodes,
 } from "@react-native-google-signin/google-signin";
 
+const GOOGLE_WEB_CLIENT_ID = "420810329731-kigurj0h8ns5pidmjmok368085t9ed98.apps.googleusercontent.com";
+
 GoogleSignin.configure({
-  webClientId: "420810329731-kigurj0h8ns5pidmjmok368085t9ed98.apps.googleusercontent.com",
+  webClientId: GOOGLE_WEB_CLIENT_ID,
 });
 
 interface AuthState {
@@ -80,7 +82,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       set({ user: profile, isGuest: false, error: "verify_email" });
     } catch (err: any) {
-      console.log("SIGNUP ERROR:", err.code, err.message);
       set({ error: formatFirebaseError(err.code) });
     } finally {
       set({ isLoading: false });
@@ -121,7 +122,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         });
       }
     } catch (err: any) {
-      console.log("SIGNIN ERROR:", err.code, err.message);
       set({ error: formatFirebaseError(err.code) });
     } finally {
       set({ isLoading: false });
@@ -170,7 +170,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       } else if (err.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
         set({ error: "Google Play Services not available." });
       } else {
-        console.log("GOOGLE SIGNIN ERROR:", err);
         set({ error: "Google sign-in failed. Please try again." });
       }
     } finally {

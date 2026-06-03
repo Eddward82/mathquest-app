@@ -7,6 +7,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Feather } from "@expo/vector-icons";
 import { COLORS } from "../../src/constants/theme";
+import React, { useEffect, memo } from "react";
 
 const ICONS: Record<string, keyof typeof Feather.glyphMap> = {
   index: "home",
@@ -22,7 +23,7 @@ const LABELS: Record<string, string> = {
   profile: "Profile",
 };
 
-function TabIcon({
+const TabIcon = memo(function TabIcon({
   name,
   focused,
   color,
@@ -31,18 +32,19 @@ function TabIcon({
   focused: boolean;
   color: string;
 }) {
-  const scale = useSharedValue(focused ? 1 : 1);
+  const scale = useSharedValue(1);
 
   const animStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
   }));
 
-  // Bounce on focus
-  if (focused) {
-    scale.value = withSpring(1.18, { damping: 10, stiffness: 260 }, () => {
-      scale.value = withSpring(1, { damping: 12, stiffness: 260 });
-    });
-  }
+  useEffect(() => {
+    if (focused) {
+      scale.value = withSpring(1.18, { damping: 10, stiffness: 260 }, () => {
+        scale.value = withSpring(1, { damping: 12, stiffness: 260 });
+      });
+    }
+  }, [focused]);
 
   return (
     <Animated.View style={[styles.iconWrap, focused && styles.iconWrapActive, animStyle]}>
@@ -54,7 +56,7 @@ function TabIcon({
       {focused && <View style={styles.activeDot} />}
     </Animated.View>
   );
-}
+});
 
 export default function TabLayout() {
   return (

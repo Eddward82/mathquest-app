@@ -211,8 +211,8 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
         current_level: newLevel,
         adaptive_difficulty_score: newDiffScore,
       }, { merge: true });
-    } catch (e) {
-      console.error("Failed to persist lesson progress:", e);
+    } catch {
+      // Offline — local state already updated optimistically
     }
 
     // ── Streak logic ──────────────────────────────────────────────────────────
@@ -241,7 +241,6 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
       { merge: true }
     );
 
-    console.log("STREAK updated:", newStreak, "last:", lastDate, "today:", today);
     set({ currentStreak: newStreak, longestStreak: longest, lastActivityDate: today });
 
     await get().checkAndUnlockAchievements(userId);
