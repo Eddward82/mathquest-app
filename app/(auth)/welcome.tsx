@@ -23,6 +23,7 @@ import Animated, {
   FadeInDown,
 } from "react-native-reanimated";
 import { COLORS, BORDER_RADIUS } from "../../src/constants/theme";
+import { useSubscriptionStore } from "../../src/store/subscriptionStore";
 
 const { width, height } = Dimensions.get("window");
 
@@ -43,6 +44,11 @@ const STEPS = [
 ];
 
 export default function WelcomeScreen() {
+  const { plans, loadPlans } = useSubscriptionStore();
+  const monthlyPlan = plans.find((p) => p.id === "monthly");
+
+  useEffect(() => { loadPlans(); }, []);
+
   const float1 = useSharedValue(0);
   const float2 = useSharedValue(0);
   const float3 = useSharedValue(0);
@@ -251,7 +257,7 @@ export default function WelcomeScreen() {
                 <Text style={styles.pricingBadgeText}>Best Value</Text>
               </View>
               <Text style={styles.pricingLabelPremium}>Premium</Text>
-              <Text style={styles.pricingPricePremium}>$5.99</Text>
+              <Text style={styles.pricingPricePremium}>{monthlyPlan?.price ?? "..."}</Text>
               <Text style={styles.pricingPerPremium}>/month</Text>
               <View style={styles.pricingFeatures}>
                 {["Unlimited lessons", "Double XP rewards", "AI tutor help", "Exclusive badges", "Advanced analytics"].map((f) => (

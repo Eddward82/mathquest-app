@@ -23,7 +23,7 @@ import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { useAuthStore } from "../src/store/authStore";
-import { useSubscriptionStore, PLANS, PlanId, Plan } from "../src/store/subscriptionStore";
+import { useSubscriptionStore, PlanId, Plan } from "../src/store/subscriptionStore";
 import { Alert } from "react-native";
 import { COLORS, BORDER_RADIUS } from "../src/constants/theme";
 
@@ -38,7 +38,9 @@ const PERKS = [
 
 export default function PaywallScreen() {
   const { user } = useAuthStore();
-  const { activatePremium, isPremium } = useSubscriptionStore();
+  const { activatePremium, isPremium, plans, loadPlans } = useSubscriptionStore();
+
+  useEffect(() => { loadPlans(); }, []);
   const [selectedPlan, setSelectedPlan] = useState<PlanId>("yearly");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -65,9 +67,12 @@ export default function PaywallScreen() {
     setIsLoading(true);
     try {
       await activatePremium(user.id, selectedPlan);
+      // Navigate immediately — entitlement polling continues in background
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       router.back();
     } catch (e: any) {
-      setErrorMsg(e.message ?? "Purchase failed. Please try again.");
+      if (e.message) setErrorMsg(e.message);
+      // If no error message, user cancelled — just stop loading
     } finally {
       setIsLoading(false);
     }
@@ -89,7 +94,7 @@ export default function PaywallScreen() {
     }
   };
 
-  const selectedPlanData = PLANS.find((p) => p.id === selectedPlan)!;
+  const selectedPlanData = plans.find((p) => p.id === selectedPlan) ?? plans[0];
 
   return (
     <SafeAreaView style={styles.safe}>
@@ -153,7 +158,7 @@ export default function PaywallScreen() {
         <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.section}>
           <Text style={styles.sectionTitle}>Choose your plan</Text>
           <View style={styles.plansRow}>
-            {PLANS.map((plan) => (
+            {plans.map((plan) => (
               <PlanCard
                 key={plan.id}
                 plan={plan}

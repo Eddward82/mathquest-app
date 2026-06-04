@@ -31,20 +31,21 @@ export interface Plan {
   highlight: boolean;
 }
 
+// Fallback prices shown before RevenueCat loads
 export const PLANS: Plan[] = [
   {
     id: "monthly",
     label: "Monthly",
-    price: "$5.99",
-    perMonth: "$5.99/mo",
+    price: "...",
+    perMonth: ".../mo",
     badge: null,
     highlight: false,
   },
   {
     id: "yearly",
     label: "Yearly",
-    price: "$47.99",
-    perMonth: "$4.00/mo",
+    price: "...",
+    perMonth: ".../mo",
     badge: "Best Value",
     highlight: true,
   },
@@ -54,6 +55,7 @@ interface SubscriptionState {
   isPremium: boolean;
   premiumExpiresAt: string | null;
   isInitialized: boolean;
+  plans: Plan[];
 
   // Lifetime usage tracking
   lessonsStartedTotal: number;
@@ -61,6 +63,7 @@ interface SubscriptionState {
   // Actions
   initRevenueCat: (userId: string) => Promise<void>;
   loadSubscription: (userId: string) => Promise<void>;
+  loadPlans: () => Promise<void>;
   canStartLesson: () => boolean;
   recordLessonStarted: (userId: string) => Promise<void>;
   purchasePlan: (planId: PlanId) => Promise<{ success: boolean; error?: string }>;
@@ -75,6 +78,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
   premiumExpiresAt: null,
   isInitialized: false,
   lessonsStartedTotal: 0,
+  plans: PLANS,
 
   initRevenueCat: async (userId) => {
     try {
@@ -100,8 +104,45 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
       Purchases.addCustomerInfoUpdateListener(customerInfoListener);
 
       set({ isInitialized: true });
+      get().loadPlans();
     } catch (e) {
       // Silent — RevenueCat unavailable
+    }
+  },
+
+  loadPlans: async () => {
+    try {
+      const offerings = await Purchases.getOfferings();
+      const current = offerings.current;
+      if (!current) return;
+
+      const monthly = current.monthly;
+      const annual = current.annual;
+
+      set({
+        plans: [
+          {
+            id: "monthly",
+            label: "Monthly",
+            price: monthly?.product.priceString ?? "...",
+            perMonth: monthly?.product.priceString ? `${monthly.product.priceString}/mo` : ".../mo",
+            badge: null,
+            highlight: false,
+          },
+          {
+            id: "yearly",
+            label: "Yearly",
+            price: annual?.product.priceString ?? "...",
+            perMonth: annual?.product.priceString
+              ? `${(annual.product.price / 12).toLocaleString(undefined, { style: "currency", currency: annual.product.currencyCode ?? "USD", maximumFractionDigits: 2 })}/mo`
+              : ".../mo",
+            badge: "Best Value",
+            highlight: true,
+          },
+        ],
+      });
+    } catch {
+      // Offline or RevenueCat unavailable — keep fallback prices
     }
   },
 
@@ -174,21 +215,22 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
       const expiresAt =
         customerInfo.entitlements.active["premium"]?.expirationDate ?? null;
 
-      // If entitlement is already active, update immediately
       if (isPremium) {
         set({ isPremium: true, premiumExpiresAt: expiresAt });
-        return { success: true };
+      } else {
+        // Entitlement not yet active — poll in background, don't block the UI
+        setTimeout(async () => {
+          try {
+            const refreshed = await Purchases.getCustomerInfo();
+            const isPremiumRefreshed = isPremiumFromCustomerInfo(refreshed);
+            const expiresAtRefreshed =
+              refreshed.entitlements.active["premium"]?.expirationDate ?? null;
+            set({ isPremium: isPremiumRefreshed, premiumExpiresAt: expiresAtRefreshed });
+          } catch {}
+        }, ENTITLEMENT_POLL_DELAY_MS);
       }
 
-      // Entitlement not yet active (common in test mode) — poll once after 3s
-      await new Promise((resolve) => setTimeout(resolve, ENTITLEMENT_POLL_DELAY_MS));
-      const refreshed = await Purchases.getCustomerInfo();
-      const isPremiumRefreshed = isPremiumFromCustomerInfo(refreshed);
-      const expiresAtRefreshed =
-        refreshed.entitlements.active["premium"]?.expirationDate ?? null;
-      set({ isPremium: isPremiumRefreshed, premiumExpiresAt: expiresAtRefreshed });
-
-      // Treat purchase as success even if entitlement is delayed
+      // Always return success immediately after purchase — don't wait for poll
       return { success: true };
     } catch (e: any) {
       if (e.userCancelled) return { success: false };
