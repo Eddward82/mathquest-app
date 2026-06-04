@@ -89,15 +89,15 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: "#0D0F1C",
-    borderTopWidth: 1,
-    borderTopColor: "#1C1F3B",
+    backgroundColor: "#FFFFFF",
+    borderTopWidth: 0,
     height: Platform.OS === "ios" ? 88 : 72,
     paddingBottom: Platform.OS === "ios" ? 28 : 12,
     paddingTop: 10,
-    shadowColor: "#000",
+    // Pronounced shadow that lifts the bar
+    shadowColor: "#6C63FF",
     shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.4,
+    shadowOpacity: 0.08,
     shadowRadius: 20,
     elevation: 16,
   },
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
     gap: 3,
   },
   iconWrapActive: {
-    backgroundColor: "rgba(255,202,58,0.10)",
+    backgroundColor: "#EEF2FF",
   },
   activeDot: {
     width: 4,

@@ -203,6 +203,6 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
   actions: { marginTop: 8 },
-  optionEliminated: { opacity: 0.35, backgroundColor: "#171A30", borderColor: "#252848" },
-  optionTextEliminated: { textDecorationLine: "line-through", color: "#363B6B" },
+  optionEliminated: { opacity: 0.35, backgroundColor: "#F8FAFC", borderColor: "#E2E8F0" },
+  optionTextEliminated: { textDecorationLine: "line-through", color: "#9CA3AF" },
 });

@@ -132,7 +132,7 @@ export default function LearnScreen() {
             style={styles.challengeCard}
           >
             <LinearGradient
-              colors={challengeDone ? ["#1A1927", "#252848"] : ["#4C35DE", "#6C63FF"]}
+              colors={challengeDone ? ["#374151", "#4B5563"] : ["#4C35DE", "#6C63FF"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
               style={styles.challengeGradient}
@@ -317,7 +317,7 @@ const LessonNode: React.FC<LessonNodeProps> = ({ lesson, index, total, isComplet
         {/* Top connector line */}
         {index > 0 && (
           <View style={[styles.connectorLine, {
-            backgroundColor: isCompleted ? topicColor : "#252848",
+            backgroundColor: isCompleted ? topicColor : "#E2E8F0",
           }]} />
         )}
 
@@ -332,10 +332,10 @@ const LessonNode: React.FC<LessonNodeProps> = ({ lesson, index, total, isComplet
             style={[
               styles.nodeCircle,
               {
-                backgroundColor: isCompleted ? topicColor : isLocked ? "#1A1D32" : "#1E2038",
-                borderColor: isCompleted ? topicColor : isLocked ? "#252848" : topicColor,
+                backgroundColor: isCompleted ? topicColor : isLocked ? "#F1F5F9" : "#FFFFFF",
+                borderColor: isCompleted ? topicColor : isLocked ? "#CBD5E1" : topicColor,
                 shadowColor: isCompleted || !isLocked ? topicColor : "transparent",
-                shadowOpacity: isCompleted ? 0.5 : isLocked ? 0 : 0.3,
+                shadowOpacity: isCompleted ? 0.4 : isLocked ? 0 : 0.2,
               },
             ]}
           >
@@ -352,7 +352,7 @@ const LessonNode: React.FC<LessonNodeProps> = ({ lesson, index, total, isComplet
         {/* Bottom connector line */}
         {!isLast && (
           <View style={[styles.connectorLine, {
-            backgroundColor: completedIds_placeholder(lesson) ? topicColor : "#252848",
+            backgroundColor: completedIds_placeholder(lesson) ? topicColor : "#E2E8F0",
           }]} />
         )}
       </View>
@@ -372,7 +372,7 @@ const LessonNode: React.FC<LessonNodeProps> = ({ lesson, index, total, isComplet
             <Text style={[styles.lessonDesc, isLocked && styles.lockedText]} numberOfLines={1}>{lesson.description}</Text>
           </View>
           <View style={[styles.xpChip, {
-            backgroundColor: isCompleted ? topicColor + "22" : isLocked ? "#1A1D32" : topicColor + "18",
+            backgroundColor: isCompleted ? topicColor + "18" : isLocked ? "#F8FAFC" : topicColor + "12",
           }]}>
             <Text style={{ fontSize: 12 }}>⚡</Text>
             <Text style={[styles.xpChipText, { color: isCompleted || !isLocked ? topicColor : "#94A3B8" }]}>
@@ -412,7 +412,7 @@ const ReviewNode: React.FC<ReviewNodeProps> = ({
     <View style={styles.nodeRow}>
       <View style={styles.nodeLeft}>
         {/* Top connector from last lesson */}
-        <View style={[styles.connectorLine, { backgroundColor: allLessonsComplete ? topicColor : "#252848" }]} />
+        <View style={[styles.connectorLine, { backgroundColor: allLessonsComplete ? topicColor : "#E2E8F0" }]} />
 
         <Animated.View style={animStyle}>
           <TouchableOpacity
@@ -425,8 +425,8 @@ const ReviewNode: React.FC<ReviewNodeProps> = ({
               styles.nodeCircle,
               styles.reviewNodeCircle,
               {
-                backgroundColor: isReviewComplete ? "#D97706" : isLocked ? "#1A1D32" : "#201608",
-                borderColor: isReviewComplete ? "#FFCA3A" : isLocked ? "#252848" : "#FFCA3A",
+                backgroundColor: isReviewComplete ? "#F59E0B" : isLocked ? "#F1F5F9" : "#FFFBEB",
+                borderColor: isReviewComplete ? "#F59E0B" : isLocked ? "#CBD5E1" : "#FCD34D",
                 shadowColor: isLocked ? "transparent" : "#F59E0B",
                 shadowOpacity: isLocked ? 0 : 0.35,
               },
@@ -452,8 +452,8 @@ const ReviewNode: React.FC<ReviewNodeProps> = ({
           styles.lessonCard,
           styles.reviewCard,
           isLocked && styles.lessonCardLocked,
-          !isLocked && !isReviewComplete && { borderColor: "rgba(255,202,58,0.4)", borderWidth: 2 },
-          isReviewComplete && { borderColor: "#FFCA3A", borderWidth: 2 },
+          !isLocked && !isReviewComplete && { borderColor: "#FCD34D", borderWidth: 2 },
+          isReviewComplete && { borderColor: "#F59E0B", borderWidth: 2 },
         ]}
       >
         <View style={styles.lessonCardContent}>
@@ -470,7 +470,7 @@ const ReviewNode: React.FC<ReviewNodeProps> = ({
             </Text>
           </View>
           {!isLocked && (
-            <View style={[styles.xpChip, { backgroundColor: isReviewComplete ? "rgba(255,202,58,0.18)" : "rgba(255,202,58,0.1)" }]}>
+            <View style={[styles.xpChip, { backgroundColor: isReviewComplete ? "#FEF3C7" : "#FFFBEB" }]}>
               <Text style={{ fontSize: 12 }}>⚡</Text>
               <Text style={[styles.xpChipText, { color: "#D97706" }]}>150</Text>
             </View>
@@ -504,7 +504,7 @@ const FilterChip: React.FC<{
         style={[styles.filterChip, active && { backgroundColor: color, borderColor: color }]}
       >
         <Text style={styles.filterIcon}>{icon}</Text>
-        <Text style={[styles.filterLabel, { color: active ? "#FFFFFF" : "#6B7494" }]}>{label}</Text>
+        <Text style={[styles.filterLabel, { color: active ? "#FFFFFF" : "#6B7280" }]}>{label}</Text>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -540,17 +540,17 @@ function shadeColor(hex: string, amount: number): string {
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#0A0C1E" },
+  safe: { flex: 1, backgroundColor: "#F4F5FF" },
   content: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 32, gap: 16 },
 
   // Daily challenge card
-  challengeCard: { borderRadius: 20, overflow: "hidden", shadowColor: "#000", shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.45, shadowRadius: 14, elevation: 10 },
+  challengeCard: { borderRadius: 20, overflow: "hidden", shadowColor: COLORS.primary, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.25, shadowRadius: 14, elevation: 8 },
   challengeGradient: { flexDirection: "row", alignItems: "center", padding: 16, gap: 12, overflow: "hidden" },
   challengeOrb: { position: "absolute", top: -20, right: 60, width: 80, height: 80, borderRadius: 40, backgroundColor: "rgba(255,255,255,0.06)" },
   challengeLeft: { flex: 1, flexDirection: "row", alignItems: "center", gap: 12 },
   challengeEmoji: { fontSize: 32 },
   challengeText: { flex: 1, gap: 2 },
-  challengeLabel: { fontSize: 9, fontWeight: "800", color: "rgba(255,255,255,0.55)", letterSpacing: 1 },
+  challengeLabel: { fontSize: 9, fontWeight: "800", color: "rgba(255,255,255,0.6)", letterSpacing: 1 },
   challengeTitle: { fontSize: 14, fontWeight: "800", color: "#FFFFFF", lineHeight: 19 },
   challengeRight: { flexDirection: "row", alignItems: "center", gap: 8 },
   challengeXP: { backgroundColor: "rgba(255,255,255,0.18)", borderRadius: 99, paddingHorizontal: 10, paddingVertical: 5, borderWidth: 1, borderColor: "rgba(255,255,255,0.25)" },
@@ -569,30 +569,30 @@ const styles = StyleSheet.create({
 
   header: { gap: 3 },
   headerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  title: { fontSize: 28, fontWeight: "900", color: "#E8EDF5", letterSpacing: -0.8 },
-  subtitle: { fontSize: 14, color: "#6B7494", fontWeight: "500" },
+  title: { fontSize: 28, fontWeight: "900", color: "#111827", letterSpacing: -0.8 },
+  subtitle: { fontSize: 14, color: "#6B7280", fontWeight: "500" },
   limitBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
-    backgroundColor: "rgba(255,202,58,0.1)",
+    backgroundColor: "#FEF3C7",
     borderWidth: 1.5,
-    borderColor: "rgba(255,202,58,0.25)",
+    borderColor: "#FDE68A",
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 99,
   },
-  limitText: { fontSize: 12, fontWeight: "800", color: "#FFCA3A" },
-  limitTextEmpty: { color: "#FF595E" },
+  limitText: { fontSize: 12, fontWeight: "800", color: "#92400E" },
+  limitTextEmpty: { color: "#DC2626" },
   premiumBadge: {
-    backgroundColor: "rgba(129,140,248,0.12)",
+    backgroundColor: "#EDE9FF",
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 99,
     borderWidth: 1.5,
-    borderColor: "rgba(129,140,248,0.3)",
+    borderColor: "#C4B5FD",
   },
-  premiumBadgeText: { fontSize: 12, fontWeight: "800", color: "#818CF8" },
+  premiumBadgeText: { fontSize: 12, fontWeight: "800", color: COLORS.primary },
 
   filterRow: { gap: 8, paddingVertical: 4 },
   filterChip: {
@@ -603,29 +603,29 @@ const styles = StyleSheet.create({
     paddingVertical: 9,
     borderRadius: BORDER_RADIUS.full,
     borderWidth: 1.5,
-    borderColor: "#252848",
-    backgroundColor: "#171A30",
+    borderColor: "#E2E8F0",
+    backgroundColor: "#FFFFFF",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
     shadowRadius: 4,
-    elevation: 2,
+    elevation: 1,
   },
   filterIcon: { fontSize: 14 },
   filterLabel: { fontSize: 13, fontWeight: "700" },
 
   // Topic card container
   topicCard: {
-    backgroundColor: "#171A30",
+    backgroundColor: "#FFFFFF",
     borderRadius: 22,
     overflow: "hidden",
-    shadowColor: "#000",
+    shadowColor: "#6C63FF",
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
+    shadowOpacity: 0.1,
     shadowRadius: 16,
-    elevation: 8,
+    elevation: 6,
     borderWidth: 1,
-    borderColor: "#252848",
+    borderColor: "#F0EDFF",
   },
   topicHeader: {
     flexDirection: "row",
@@ -640,37 +640,37 @@ const styles = StyleSheet.create({
     width: 44,
     height: 44,
     borderRadius: 14,
-    backgroundColor: "rgba(255,255,255,0.15)",
+    backgroundColor: "rgba(255,255,255,0.22)",
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.2)",
+    borderColor: "rgba(255,255,255,0.3)",
   },
   topicEmoji: { fontSize: 22 },
   topicTitle: { fontSize: 17, fontWeight: "800", color: "#FFFFFF", letterSpacing: -0.3 },
-  topicSubtitle: { fontSize: 12, color: "rgba(255,255,255,0.65)", marginTop: 1, fontWeight: "500" },
+  topicSubtitle: { fontSize: 12, color: "rgba(255,255,255,0.75)", marginTop: 1, fontWeight: "500" },
   headerRight: { flexDirection: "row", alignItems: "center", gap: 8 },
   practiceBtn: {
     flexDirection: "row", alignItems: "center", gap: 4,
-    backgroundColor: "rgba(255,255,255,0.15)",
+    backgroundColor: "rgba(255,255,255,0.18)",
     borderRadius: 99, paddingHorizontal: 10, paddingVertical: 6,
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.2)",
+    borderWidth: 1, borderColor: "rgba(255,255,255,0.3)",
   },
   practiceBtnText: { color: "rgba(255,255,255,0.9)", fontSize: 11, fontWeight: "700" },
   pctBadge: {
-    backgroundColor: "rgba(255,255,255,0.15)",
+    backgroundColor: "rgba(255,255,255,0.22)",
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.2)",
+    borderColor: "rgba(255,255,255,0.3)",
   },
   pctText: { color: "#FFFFFF", fontWeight: "900", fontSize: 14 },
 
-  progressTrack: { height: 3, backgroundColor: "#252848", overflow: "hidden" },
+  progressTrack: { height: 3, backgroundColor: "#F1F5F9", overflow: "hidden" },
   progressFill: { height: "100%", minWidth: 3 },
 
-  lessonsContainer: { padding: 16, gap: 0, backgroundColor: "#171A30" },
+  lessonsContainer: { padding: 16, gap: 0 },
 
   // Lesson node row
   nodeRow: { flexDirection: "row", alignItems: "stretch", gap: 12, minHeight: 72 },
@@ -686,27 +686,27 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowRadius: 8,
     elevation: 4,
-    backgroundColor: "#1E2038",
+    backgroundColor: "#FFFFFF",
   },
   nodeNum: { fontWeight: "900", fontSize: 16 },
 
   // Lesson card
   lessonCard: {
     flex: 1,
-    backgroundColor: "#1E2038",
+    backgroundColor: "#FAFAFA",
     borderRadius: 16,
     borderWidth: 1.5,
-    borderColor: "#252848",
+    borderColor: "#F1F5F9",
     overflow: "hidden",
     alignSelf: "center",
     marginVertical: 6,
   },
-  lessonCardLocked: { opacity: 0.45 },
+  lessonCardLocked: { opacity: 0.55 },
   lessonCardContent: { flexDirection: "row", alignItems: "center", padding: 12, gap: 10 },
   lessonCardLeft: { flex: 1, gap: 3 },
-  lessonName: { fontSize: 14, fontWeight: "700", color: "#E8EDF5", letterSpacing: -0.1 },
-  lessonDesc: { fontSize: 12, color: "#6B7494", fontWeight: "500" },
-  lockedText: { color: "#363B6B" },
+  lessonName: { fontSize: 14, fontWeight: "700", color: "#111827", letterSpacing: -0.1 },
+  lessonDesc: { fontSize: 12, color: "#6B7280", fontWeight: "500" },
+  lockedText: { color: "#9CA3AF" },
   xpChip: {
     flexDirection: "row",
     alignItems: "center",
@@ -724,20 +724,20 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   reviewNodeEmoji: { fontSize: 20 },
-  reviewCard: { backgroundColor: "#1A1608" },
-  reviewCardTitle: { fontSize: 14, fontWeight: "800", color: "#E8EDF5" },
-  reviewCardDesc: { fontSize: 12, color: "#6B7494", fontWeight: "500", marginTop: 2 },
+  reviewCard: { backgroundColor: "#FFFBEB" },
+  reviewCardTitle: { fontSize: 14, fontWeight: "800", color: "#111827" },
+  reviewCardDesc: { fontSize: 12, color: "#6B7280", fontWeight: "500", marginTop: 2 },
   reviewBonusBanner: {
-    backgroundColor: "rgba(255,202,58,0.08)",
+    backgroundColor: "#FEF3C7",
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderTopWidth: 1,
-    borderTopColor: "rgba(255,202,58,0.18)",
+    borderTopColor: "#FDE68A",
   },
   reviewBonusText: {
     fontSize: 10,
     fontWeight: "800",
-    color: "rgba(255,202,58,0.7)",
+    color: "#92400E",
     letterSpacing: 0.3,
     textTransform: "uppercase",
   },

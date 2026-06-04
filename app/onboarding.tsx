@@ -142,7 +142,7 @@ export default function OnboardingScreen() {
       <View style={styles.progressRow}>
         {step > 0 && (
           <TouchableOpacity onPress={goBack} style={styles.backBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-            <Feather name="arrow-left" size={20} color="#6B7494" />
+            <Feather name="arrow-left" size={20} color="#6B7280" />
           </TouchableOpacity>
         )}
         <View style={[styles.progressTrack, step === 0 && { marginLeft: 44 }]}>
@@ -369,7 +369,7 @@ const TopicChip: React.FC<{
 // ─── Styles ───────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#0A0C1E" },
+  safe: { flex: 1, backgroundColor: "#F4F5FF" },
 
   progressRow: {
     flexDirection: "row",
@@ -381,46 +381,46 @@ const styles = StyleSheet.create({
   },
   backBtn: {
     width: 36, height: 36, borderRadius: 12,
-    backgroundColor: "#171A30", alignItems: "center", justifyContent: "center",
-    borderWidth: 1.5, borderColor: "#252848",
+    backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center",
+    borderWidth: 1.5, borderColor: "#E2E8F0",
   },
   progressTrack: { flex: 1, flexDirection: "row", gap: 5 },
   progressSegment: {
-    flex: 1, height: 6, borderRadius: 3, backgroundColor: "#252848",
+    flex: 1, height: 6, borderRadius: 3, backgroundColor: "#E2E8F0",
   },
   progressSegmentActive: { backgroundColor: COLORS.primary },
-  stepCount: { fontSize: 12, fontWeight: "700", color: "#363B6B", width: 32, textAlign: "right" },
+  stepCount: { fontSize: 12, fontWeight: "700", color: "#9CA3AF", width: 32, textAlign: "right" },
 
   scroll: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 24 },
-  greeting: { fontSize: 15, color: "#6B7494", fontWeight: "500", marginBottom: 2 },
+  greeting: { fontSize: 15, color: "#6B7280", fontWeight: "500", marginBottom: 2 },
 
   stepWrap: { gap: 4 },
-  title: { fontSize: 24, fontWeight: "900", color: "#E8EDF5", marginTop: 4 },
-  subtitle: { fontSize: 13, color: "#6B7494", lineHeight: 19, marginBottom: 16 },
+  title: { fontSize: 24, fontWeight: "900", color: "#1F2937", marginTop: 4 },
+  subtitle: { fontSize: 13, color: "#6B7280", lineHeight: 19, marginBottom: 16 },
 
   cards: { gap: 10 },
 
   card: {
-    borderRadius: BORDER_RADIUS.xl, borderWidth: 1.5, borderColor: "#252848",
+    borderRadius: BORDER_RADIUS.xl, borderWidth: 1.5, borderColor: "#E2E8F0",
     overflow: "hidden",
-    shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3, shadowRadius: 4, elevation: 2,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
   },
   cardInner: { flexDirection: "row", alignItems: "center", padding: 14, gap: 12 },
   cardIconBox: {
     width: 46, height: 46, borderRadius: 23,
-    backgroundColor: "rgba(255,255,255,0.12)", alignItems: "center", justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.22)", alignItems: "center", justifyContent: "center",
   },
   cardEmoji: { fontSize: 24 },
   cardContent: { flex: 1, gap: 2 },
-  cardTitle: { fontSize: 16, fontWeight: "800", color: "#E8EDF5" },
+  cardTitle: { fontSize: 16, fontWeight: "800", color: "#1F2937" },
   cardTitleLight: { color: "#FFFFFF" },
-  cardDesc: { fontSize: 12, color: "#6B7494", lineHeight: 17 },
+  cardDesc: { fontSize: 12, color: "#6B7280", lineHeight: 17 },
   cardDescLight: { color: "rgba(255,255,255,0.82)" },
   cardTopics: { fontSize: 11, fontWeight: "600", marginTop: 3 },
   check: {
     width: 26, height: 26, borderRadius: 13,
-    backgroundColor: "rgba(255,255,255,0.15)", alignItems: "center", justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.25)", alignItems: "center", justifyContent: "center",
   },
   checkText: { color: "#FFFFFF", fontWeight: "900", fontSize: 14 },
 
@@ -428,12 +428,12 @@ const styles = StyleSheet.create({
   chip: {
     flexDirection: "row", alignItems: "center", gap: 6,
     paddingHorizontal: 14, paddingVertical: 10,
-    borderRadius: 99, borderWidth: 1.5, borderColor: "#252848",
-    backgroundColor: "#171A30",
+    borderRadius: 99, borderWidth: 1.5, borderColor: "#E2E8F0",
+    backgroundColor: "#FFFFFF",
   },
-  chipSelected: { borderColor: COLORS.primary, backgroundColor: "rgba(255,202,58,0.10)" },
+  chipSelected: { borderColor: COLORS.primary, backgroundColor: "#EEF2FF" },
   chipEmoji: { fontSize: 16 },
-  chipLabel: { fontSize: 13, fontWeight: "700", color: "#6B7494" },
+  chipLabel: { fontSize: 13, fontWeight: "700", color: "#374151" },
   chipLabelSelected: { color: COLORS.primary },
 
   footer: { paddingHorizontal: 20, paddingBottom: 24, paddingTop: 8, gap: 10 },
@@ -443,6 +443,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3, shadowRadius: 14, elevation: 8,
   },
   cta: { paddingVertical: 17, alignItems: "center" },
-  ctaText: { color: "#0A0C1E", fontWeight: "800", fontSize: 17, letterSpacing: 0.3 },
-  skipNote: { textAlign: "center", fontSize: 12, color: "#363B6B" },
+  ctaText: { color: "#FFFFFF", fontWeight: "800", fontSize: 17, letterSpacing: 0.3 },
+  skipNote: { textAlign: "center", fontSize: 12, color: "#9CA3AF" },
 });

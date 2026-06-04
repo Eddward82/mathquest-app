@@ -342,7 +342,7 @@ const PressableButton: React.FC<{
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: "#0A0C1E" },
+  root: { flex: 1, backgroundColor: "#F4F5FF" },
   scroll: { flexGrow: 1 },
 
   // Hero
@@ -428,10 +428,9 @@ const styles = StyleSheet.create({
   },
   primaryBtnLight: {
     borderRadius: BORDER_RADIUS.xl, overflow: "hidden",
-    backgroundColor: "#171A30",
+    backgroundColor: "#fff",
     shadowColor: "#000", shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3, shadowRadius: 10, elevation: 6,
-    borderWidth: 1, borderColor: "#252848",
+    shadowOpacity: 0.15, shadowRadius: 10, elevation: 6,
   },
   primaryBtnInner: { paddingVertical: 17, alignItems: "center", justifyContent: "center" },
   primaryBtnText: { color: COLORS.primary, fontWeight: "800", fontSize: 17, letterSpacing: 0.3 },
@@ -444,32 +443,31 @@ const styles = StyleSheet.create({
   secondaryBtnText: { color: "#FFFFFF", fontWeight: "700", fontSize: 16 },
 
   // Sections
-  section: { paddingHorizontal: 20, paddingVertical: 48, backgroundColor: "#0A0C1E" },
-  sectionAlt: { backgroundColor: "#0D0F1F" },
+  section: { paddingHorizontal: 20, paddingVertical: 48, backgroundColor: "#F4F5FF" },
+  sectionAlt: { backgroundColor: "#FFFFFF" },
   sectionTag: {
     alignSelf: "flex-start",
-    backgroundColor: "rgba(255,202,58,0.12)", paddingHorizontal: 12, paddingVertical: 5,
+    backgroundColor: "#EDE9FF", paddingHorizontal: 12, paddingVertical: 5,
     borderRadius: 99, marginBottom: 12,
-    borderWidth: 1, borderColor: "rgba(255,202,58,0.25)",
   },
   sectionTagText: { color: COLORS.primary, fontSize: 11, fontWeight: "800", letterSpacing: 0.8 },
   sectionTitle: {
-    fontSize: 26, fontWeight: "900", color: "#E8EDF5",
+    fontSize: 26, fontWeight: "900", color: "#111827",
     letterSpacing: -0.8, lineHeight: 32, marginBottom: 10,
   },
-  sectionSub: { fontSize: 15, color: "#6B7494", lineHeight: 23, marginBottom: 28 },
+  sectionSub: { fontSize: 15, color: "#6B7280", lineHeight: 23, marginBottom: 28 },
 
   // Features
   featuresGrid: { gap: 14 },
   featureCard: {
-    backgroundColor: "#171A30", borderRadius: 18, padding: 20,
-    borderWidth: 1, borderColor: "#252848",
-    shadowColor: "#000", shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3, shadowRadius: 8, elevation: 2,
+    backgroundColor: "#fff", borderRadius: 18, padding: 20,
+    borderWidth: 1, borderColor: "#EDE9FF",
+    shadowColor: "#6C63FF", shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06, shadowRadius: 8, elevation: 2,
   },
   featureIcon: { fontSize: 28, marginBottom: 10 },
-  featureTitle: { fontSize: 16, fontWeight: "800", color: "#E8EDF5", marginBottom: 6 },
-  featureDesc: { fontSize: 14, color: "#6B7494", lineHeight: 21 },
+  featureTitle: { fontSize: 16, fontWeight: "800", color: "#111827", marginBottom: 6 },
+  featureDesc: { fontSize: 14, color: "#6B7280", lineHeight: 21 },
 
   // Steps
   stepsList: { gap: 20 },
@@ -477,42 +475,42 @@ const styles = StyleSheet.create({
   stepNum: {
     width: 44, height: 44, borderRadius: 22,
     alignItems: "center", justifyContent: "center",
-    shadowColor: COLORS.primary, shadowOffset: { width: 0, height: 4 },
+    shadowColor: "#6C63FF", shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3, shadowRadius: 8, elevation: 4,
     flexShrink: 0,
   },
-  stepNumText: { color: "#0A0C1E", fontWeight: "900", fontSize: 18 },
+  stepNumText: { color: "#fff", fontWeight: "900", fontSize: 18 },
   stepContent: { flex: 1, paddingTop: 4 },
-  stepTitle: { fontSize: 16, fontWeight: "800", color: "#E8EDF5", marginBottom: 4 },
-  stepDesc: { fontSize: 14, color: "#6B7494", lineHeight: 21 },
+  stepTitle: { fontSize: 16, fontWeight: "800", color: "#111827", marginBottom: 4 },
+  stepDesc: { fontSize: 14, color: "#6B7280", lineHeight: 21 },
 
   // Pricing
   pricingRow: { flexDirection: "row", gap: 14 },
   pricingCard: {
-    flex: 1, backgroundColor: "#171A30", borderRadius: 20, padding: 20,
-    borderWidth: 2, borderColor: "#252848",
+    flex: 1, backgroundColor: "#fff", borderRadius: 20, padding: 20,
+    borderWidth: 2, borderColor: "#E2E8F0",
   },
   pricingCardPremium: {
     flex: 1, borderRadius: 20, padding: 20, position: "relative", overflow: "visible",
-    shadowColor: COLORS.primary, shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25, shadowRadius: 20, elevation: 10,
+    shadowColor: "#6C63FF", shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3, shadowRadius: 20, elevation: 10,
   },
   pricingBadge: {
     position: "absolute", top: -12, alignSelf: "center",
-    backgroundColor: COLORS.primary, paddingHorizontal: 12, paddingVertical: 4,
+    backgroundColor: "#FFD700", paddingHorizontal: 12, paddingVertical: 4,
     borderRadius: 99,
   },
-  pricingBadgeText: { color: "#0A0C1E", fontSize: 10, fontWeight: "900" },
-  pricingLabel: { fontSize: 13, fontWeight: "700", color: "#6B7494", marginBottom: 6 },
+  pricingBadgeText: { color: "#111", fontSize: 10, fontWeight: "900" },
+  pricingLabel: { fontSize: 13, fontWeight: "700", color: "#6B7280", marginBottom: 6 },
   pricingLabelPremium: { fontSize: 13, fontWeight: "700", color: "rgba(255,255,255,0.75)", marginBottom: 6, marginTop: 8 },
-  pricingPrice: { fontSize: 32, fontWeight: "900", color: "#E8EDF5", letterSpacing: -1 },
+  pricingPrice: { fontSize: 32, fontWeight: "900", color: "#111827", letterSpacing: -1 },
   pricingPricePremium: { fontSize: 32, fontWeight: "900", color: "#fff", letterSpacing: -1 },
-  pricingPer: { fontSize: 12, color: "#363B6B", marginBottom: 16, fontWeight: "600" },
+  pricingPer: { fontSize: 12, color: "#9CA3AF", marginBottom: 16, fontWeight: "600" },
   pricingPerPremium: { fontSize: 11, color: "rgba(255,255,255,0.7)", marginBottom: 16, fontWeight: "600" },
   pricingFeatures: { gap: 8 },
   pricingFeatureRow: { flexDirection: "row", alignItems: "center", gap: 8 },
   checkIcon: { color: COLORS.primary, fontWeight: "900", fontSize: 13 },
-  pricingFeatureText: { fontSize: 13, color: "#6B7494", fontWeight: "500" },
+  pricingFeatureText: { fontSize: 13, color: "#374151", fontWeight: "500" },
 
   // Bottom CTA
   bottomCta: {
@@ -532,10 +530,9 @@ const styles = StyleSheet.create({
 
   // Footer
   footer: {
-    backgroundColor: "#050810", paddingVertical: 32, paddingHorizontal: 24,
+    backgroundColor: "#111827", paddingVertical: 32, paddingHorizontal: 24,
     alignItems: "center", gap: 8,
-    borderTopWidth: 1, borderTopColor: "#1C1F3B",
   },
-  footerLogo: { fontSize: 18, fontWeight: "900", color: "#E8EDF5", marginBottom: 4 },
-  footerText: { fontSize: 13, color: "#363B6B", textAlign: "center" },
+  footerLogo: { fontSize: 18, fontWeight: "900", color: "#fff", marginBottom: 4 },
+  footerText: { fontSize: 13, color: "#6B7280", textAlign: "center" },
 });

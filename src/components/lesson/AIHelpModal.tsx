@@ -135,8 +135,8 @@ const stepStyles = StyleSheet.create({
   },
   numberText: { color: "#FFFFFF", fontWeight: "900", fontSize: 13 },
   content: { flex: 1, gap: 4 },
-  title: { fontSize: 14, fontWeight: "800", color: "#E8EDF5", letterSpacing: -0.1 },
-  body: { fontSize: 14, color: "#6B7494", lineHeight: 21, fontWeight: "400" },
+  title: { fontSize: 14, fontWeight: "800", color: "#1F2937", letterSpacing: -0.1 },
+  body: { fontSize: 14, color: "#4B5563", lineHeight: 21, fontWeight: "400" },
 });
 
 // ── Main modal ────────────────────────────────────────────────────────────────
@@ -447,16 +447,14 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   sheet: {
-    backgroundColor: "#171A30",
+    backgroundColor: "#FFFFFF",
     borderTopLeftRadius: 28,
     borderTopRightRadius: 28,
-    borderTopWidth: 1,
-    borderColor: "#252848",
     maxHeight: "90%",
     overflow: "hidden",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: -6 },
-    shadowOpacity: 0.4,
+    shadowOpacity: 0.14,
     shadowRadius: 24,
     elevation: 20,
   },
@@ -505,7 +503,7 @@ const styles = StyleSheet.create({
     margin: 16,
     marginBottom: 8,
     padding: 14,
-    backgroundColor: "#1E2038",
+    backgroundColor: "#F4F5FF",
     borderRadius: 16,
     borderLeftWidth: 3,
     borderLeftColor: COLORS.primary,
@@ -518,7 +516,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 0.6,
   },
-  questionText: { fontSize: 15, color: "#E8EDF5", fontWeight: "500", lineHeight: 22 },
+  questionText: { fontSize: 15, color: "#1F2937", fontWeight: "500", lineHeight: 22 },
 
   // Body
   body: { paddingHorizontal: 16 },
@@ -526,36 +524,34 @@ const styles = StyleSheet.create({
 
   // Streaming
   streamContainer: { gap: 14, paddingBottom: 8 },
-  streamText: { fontSize: 14, color: "#E8EDF5", lineHeight: 22, fontWeight: "400" },
+  streamText: { fontSize: 14, color: "#374151", lineHeight: 22, fontWeight: "400" },
 
   // Thinking
   thinkingContainer: { paddingVertical: 32, alignItems: "center" },
   thinkingCard: {
     alignItems: "center",
     gap: 14,
-    backgroundColor: "#1E2038",
+    backgroundColor: "#F4F5FF",
     borderRadius: 18,
     paddingVertical: 28,
     paddingHorizontal: 32,
     width: "100%",
   },
-  thinkingText: { color: "#6B7494", fontSize: 14, fontWeight: "600" },
+  thinkingText: { color: "#6B7280", fontSize: 14, fontWeight: "600" },
 
   // Error
   errorContainer: { alignItems: "center", paddingVertical: 32, gap: 10 },
-  errorTitle: { fontSize: 16, fontWeight: "700", color: "#E8EDF5" },
-  errorSub: { fontSize: 14, color: "#6B7494", textAlign: "center" },
+  errorTitle: { fontSize: 16, fontWeight: "700", color: "#1F2937" },
+  errorSub: { fontSize: 14, color: "#6B7280", textAlign: "center" },
   retryBtn: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
     marginTop: 8,
-    backgroundColor: "rgba(129,140,248,0.12)",
+    backgroundColor: "#EDE9FF",
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: BORDER_RADIUS.full,
-    borderWidth: 1,
-    borderColor: "rgba(129,140,248,0.25)",
   },
   retryText: { color: COLORS.primary, fontWeight: "700", fontSize: 14 },
 
@@ -563,7 +559,7 @@ const styles = StyleSheet.create({
   explanationContainer: { gap: 14 },
   stepsHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
   topicEmoji: { fontSize: 22 },
-  stepsTitle: { fontSize: 16, fontWeight: "800", color: "#E8EDF5", letterSpacing: -0.2 },
+  stepsTitle: { fontSize: 16, fontWeight: "800", color: "#1F2937", letterSpacing: -0.2 },
   stepsList: { gap: 10 },
 
   // Tip
@@ -571,7 +567,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     overflow: "hidden",
     borderWidth: 1.5,
-    borderColor: "rgba(255,202,58,0.25)",
+    borderColor: "#FDE68A",
   },
   tipGradient: {
     flexDirection: "row",

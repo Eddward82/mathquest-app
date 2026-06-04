@@ -198,11 +198,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: "rgba(255,89,94,0.10)",
+    backgroundColor: "#FFF1F2",
     borderRadius: BORDER_RADIUS.lg,
     padding: 14,
     borderWidth: 1,
-    borderColor: "rgba(255,89,94,0.3)",
+    borderColor: "#FECACA",
   },
   errorBannerText: { color: COLORS.dangerDark, fontWeight: "500", flex: 1, fontSize: 14 },
   verifyBanner: {

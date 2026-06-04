@@ -192,10 +192,10 @@ export default function ProfileScreen() {
 
         {/* ── Stats grid ───────────────────────────────────────────────────── */}
         <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.statsGrid}>
-          <StatTile icon="⚡" label="Total XP" value={totalXP.toLocaleString()} color="#818CF8" bg="#171A30" border="#252848" />
-          <StatTile icon="🔥" label="Streak" value={`${currentStreak}d`} color="#FF9F1C" bg="#171A30" border="#252848" />
-          <StatTile icon="🏆" label="Longest" value={`${longestStreak}d`} color="#FFCA3A" bg="#171A30" border="#252848" />
-          <StatTile icon="✅" label="Lessons" value={`${lessonsCompleted}`} color="#6BCB77" bg="#171A30" border="#252848" />
+          <StatTile icon="⚡" label="Total XP" value={totalXP.toLocaleString()} color="#6C63FF" bg="#EEF2FF" border="#C7D2FE" />
+          <StatTile icon="🔥" label="Streak" value={`${currentStreak}d`} color="#EA580C" bg="#FFF7ED" border="#FED7AA" />
+          <StatTile icon="🏆" label="Longest" value={`${longestStreak}d`} color="#D97706" bg="#FEFCE8" border="#FDE68A" />
+          <StatTile icon="✅" label="Lessons" value={`${lessonsCompleted}`} color="#16A34A" bg="#F0FDF4" border="#BBF7D0" />
         </Animated.View>
 
         {/* ── Subscription status ──────────────────────────────────────────── */}
@@ -270,8 +270,8 @@ export default function ProfileScreen() {
             <Switch
               value={notificationsOn}
               onValueChange={handleToggleNotifications}
-              trackColor={{ false: "#252848", true: "rgba(255,202,58,0.4)" }}
-              thumbColor={notificationsOn ? "#FFCA3A" : "#363B6B"}
+              trackColor={{ false: "#E2E8F0", true: COLORS.primary + "80" }}
+              thumbColor={notificationsOn ? COLORS.primary : "#94A3B8"}
             />
           </View>
           <View style={styles.menuDivider} />
@@ -323,7 +323,7 @@ const SubscriptionCard: React.FC<{
     return (
       <View style={[subStyles.card, subStyles.premiumCard]}>
         <LinearGradient
-          colors={["#4F46E5", "#7C3AED", "#8B5CF6"]}
+          colors={["#4F46E5", COLORS.primary, "#8B5CF6"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={subStyles.gradientBg}
@@ -377,7 +377,7 @@ const SubscriptionCard: React.FC<{
           style={subStyles.upgradeBtn}
         >
           <LinearGradient
-            colors={["#4F46E5", "#7C3AED"]}
+            colors={["#4F46E5", COLORS.primary]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={subStyles.upgradeBtnGradient}
@@ -398,15 +398,15 @@ const subStyles = StyleSheet.create({
     borderRadius: 18,
     overflow: "hidden",
     borderWidth: 1.5,
-    borderColor: "#252848",
-    shadowColor: "#000",
+    borderColor: "#EDE9FF",
+    shadowColor: COLORS.primary,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 4,
-    backgroundColor: "#171A30",
+    backgroundColor: "#FFFFFF",
   },
-  premiumCard: { borderColor: "rgba(129,140,248,0.35)" },
+  premiumCard: { borderColor: "#C4B5FD" },
   gradientBg: { padding: 16, overflow: "hidden" },
   orbSmall: {
     position: "absolute",
@@ -444,11 +444,11 @@ const subStyles = StyleSheet.create({
   // Free plan
   freeRow: { flexDirection: "row", alignItems: "center", padding: 16, gap: 12 },
   freeLeft: { flex: 1, gap: 4 },
-  freeTitle: { fontSize: 14, fontWeight: "800", color: "#E8EDF5" },
-  freeSub: { fontSize: 12, color: "#6B7494", fontWeight: "500" },
+  freeTitle: { fontSize: 14, fontWeight: "800", color: "#111827" },
+  freeSub: { fontSize: 12, color: "#6B7280", fontWeight: "500" },
   usageTrack: {
     height: 5,
-    backgroundColor: "#252848",
+    backgroundColor: "#F1F5F9",
     borderRadius: 99,
     overflow: "hidden",
     marginTop: 6,
@@ -489,22 +489,22 @@ const StatTile: React.FC<{
 const MenuItem: React.FC<{ icon: string; label: string; color: string; onPress: () => void }> = ({
   icon, label, color, onPress,
 }) => {
-  const bg = useSharedValue("#171A30");
+  const bg = useSharedValue("#FAFAFA");
   const bgStyle = useAnimatedStyle(() => ({ backgroundColor: bg.value }));
   return (
     <Animated.View style={bgStyle}>
       <TouchableOpacity
         style={styles.menuItem}
         onPress={onPress}
-        onPressIn={() => { bg.value = withTiming("#1E2038", { duration: 100 }); }}
-        onPressOut={() => { bg.value = withTiming("#171A30", { duration: 200 }); }}
+        onPressIn={() => { bg.value = withTiming("#F4F5FF", { duration: 100 }); }}
+        onPressOut={() => { bg.value = withTiming("#FAFAFA", { duration: 200 }); }}
         activeOpacity={1}
       >
-        <View style={[styles.menuIconWrap, { backgroundColor: color + "20" }]}>
+        <View style={[styles.menuIconWrap, { backgroundColor: color + "15" }]}>
           <Feather name={icon as any} size={18} color={color} />
         </View>
         <Text style={styles.menuLabel}>{label}</Text>
-        <Feather name="chevron-right" size={16} color="#363B6B" />
+        <Feather name="chevron-right" size={16} color="#CBD5E1" />
       </TouchableOpacity>
     </Animated.View>
   );
@@ -526,9 +526,9 @@ const StreakCalendar: React.FC<{ currentStreak: number }> = ({ currentStreak }) 
             <Text style={[styles.calLabel, isToday && { color: COLORS.primary, fontWeight: "700" }]}>{day}</Text>
             <View style={[
               styles.calDot,
-              isActive && { backgroundColor: "#FF9F1C", shadowColor: "#FF9F1C", shadowOpacity: 0.45, shadowRadius: 6, elevation: 3 },
-              isToday && !isActive && { backgroundColor: "rgba(255,202,58,0.1)", borderWidth: 2, borderColor: "#FFCA3A" },
-              !isActive && !isToday && { backgroundColor: "#1E2038" },
+              isActive && { backgroundColor: "#F97316", shadowColor: "#F97316", shadowOpacity: 0.4, shadowRadius: 6, elevation: 3 },
+              isToday && !isActive && { backgroundColor: COLORS.primaryLight, borderWidth: 2, borderColor: COLORS.primary },
+              !isActive && !isToday && { backgroundColor: "#F1F5F9" },
             ]}>
               {isActive && <Text style={{ fontSize: 14 }}>🔥</Text>}
               {isToday && !isActive && <View style={styles.calTodayDot} />}
@@ -543,7 +543,7 @@ const StreakCalendar: React.FC<{ currentStreak: number }> = ({ currentStreak }) 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#0A0C1E" },
+  safe: { flex: 1, backgroundColor: "#F4F5FF" },
   content: { gap: 16, paddingBottom: 40 },
 
   heroHeader: {
@@ -554,13 +554,13 @@ const styles = StyleSheet.create({
     gap: 8,
     overflow: "hidden",
   },
-  orb1: { position: "absolute", top: -60, left: -40, width: 200, height: 200, borderRadius: 100, backgroundColor: "rgba(255,202,58,0.04)" },
-  orb2: { position: "absolute", bottom: -40, right: -30, width: 150, height: 150, borderRadius: 75, backgroundColor: "rgba(129,140,248,0.05)" },
+  orb1: { position: "absolute", top: -60, left: -40, width: 200, height: 200, borderRadius: 100, backgroundColor: "rgba(255,255,255,0.06)" },
+  orb2: { position: "absolute", bottom: -40, right: -30, width: 150, height: 150, borderRadius: 75, backgroundColor: "rgba(255,255,255,0.05)" },
 
   avatarRing: {
     padding: 3,
     borderRadius: 50,
-    backgroundColor: "rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(255,255,255,0.25)",
     marginBottom: 4,
   },
   avatar: {
@@ -570,46 +570,46 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 2,
-    borderColor: "rgba(255,255,255,0.2)",
+    borderColor: "rgba(255,255,255,0.4)",
   },
   avatarLetter: { fontSize: 34, fontWeight: "900", color: "#FFFFFF" },
 
-  heroName: { fontSize: 24, fontWeight: "900", color: "#E8EDF5", letterSpacing: -0.5 },
-  heroEmail: { fontSize: 13, color: "#6B7494", fontWeight: "500" },
+  heroName: { fontSize: 24, fontWeight: "900", color: "#FFFFFF", letterSpacing: -0.5 },
+  heroEmail: { fontSize: 13, color: "rgba(255,255,255,0.7)", fontWeight: "500" },
 
   levelPill: {
-    backgroundColor: "rgba(255,202,58,0.12)",
+    backgroundColor: "rgba(255,255,255,0.18)",
     borderRadius: BORDER_RADIUS.full,
     paddingHorizontal: 16,
     paddingVertical: 7,
     borderWidth: 1,
-    borderColor: "rgba(255,202,58,0.3)",
+    borderColor: "rgba(255,255,255,0.28)",
     marginTop: 2,
   },
-  levelPillText: { color: "#FFCA3A", fontWeight: "700", fontSize: 13 },
+  levelPillText: { color: "#FFFFFF", fontWeight: "700", fontSize: 13 },
 
   heroXPSection: { width: "100%", gap: 6, marginTop: 6 },
   heroXPRow: { flexDirection: "row", justifyContent: "space-between" },
-  heroXPLabel: { color: "rgba(255,202,58,0.8)", fontSize: 12, fontWeight: "600" },
-  heroXPNext: { color: "#6B7494", fontSize: 12, fontWeight: "500" },
-  heroXPTrack: { height: 9, backgroundColor: "rgba(255,202,58,0.12)", borderRadius: 99, overflow: "hidden" },
-  heroXPFill: { height: "100%", backgroundColor: "#FFCA3A", borderRadius: 99, minWidth: 4 },
-  xpShimmer: { position: "absolute", top: 0, right: 0, bottom: 0, width: 16, backgroundColor: "rgba(255,255,255,0.25)", borderRadius: 99 },
-  heroXPSub: { color: "#6B7494", fontSize: 11, fontWeight: "500", textAlign: "center" },
+  heroXPLabel: { color: "rgba(255,255,255,0.8)", fontSize: 12, fontWeight: "600" },
+  heroXPNext: { color: "rgba(255,255,255,0.55)", fontSize: 12, fontWeight: "500" },
+  heroXPTrack: { height: 9, backgroundColor: "rgba(255,255,255,0.2)", borderRadius: 99, overflow: "hidden" },
+  heroXPFill: { height: "100%", backgroundColor: "#FFFFFF", borderRadius: 99, minWidth: 4 },
+  xpShimmer: { position: "absolute", top: 0, right: 0, bottom: 0, width: 16, backgroundColor: "rgba(255,255,255,0.5)", borderRadius: 99 },
+  heroXPSub: { color: "rgba(255,255,255,0.6)", fontSize: 11, fontWeight: "500", textAlign: "center" },
 
   signUpBanner: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-    backgroundColor: "rgba(255,202,58,0.1)",
+    backgroundColor: "rgba(255,255,255,0.15)",
     borderRadius: BORDER_RADIUS.full,
     paddingHorizontal: 16,
     paddingVertical: 10,
     marginTop: 8,
     borderWidth: 1,
-    borderColor: "rgba(255,202,58,0.25)",
+    borderColor: "rgba(255,255,255,0.25)",
   },
-  signUpBannerText: { color: "#FFCA3A", fontWeight: "600", fontSize: 13, flex: 1 },
+  signUpBannerText: { color: "#FFFFFF", fontWeight: "600", fontSize: 13, flex: 1 },
 
   // Stats
   statsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 10, paddingHorizontal: 16 },
@@ -620,72 +620,72 @@ const styles = StyleSheet.create({
     gap: 5,
     borderWidth: 1.5,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
   },
   statIcon: { fontSize: 22 },
   statValue: { fontSize: 24, fontWeight: "900", letterSpacing: -0.5 },
-  statLabel: { fontSize: 11, color: "#6B7494", fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 },
+  statLabel: { fontSize: 11, color: "#9CA3AF", fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 },
 
   // Section
   sectionRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16 },
-  sectionTitle: { fontSize: 18, fontWeight: "800", color: "#E8EDF5", letterSpacing: -0.3 },
-  sectionRight: { fontSize: 13, color: "#6B7494", fontWeight: "600" },
+  sectionTitle: { fontSize: 18, fontWeight: "800", color: "#111827", letterSpacing: -0.3 },
+  sectionRight: { fontSize: 13, color: "#9CA3AF", fontWeight: "600" },
 
   // Calendar
   calendar: {
     flexDirection: "row",
     justifyContent: "space-around",
-    backgroundColor: "#171A30",
+    backgroundColor: "#FFFFFF",
     marginHorizontal: 16,
     borderRadius: 20,
     padding: 18,
     borderWidth: 1,
-    borderColor: "#252848",
-    shadowColor: "#000",
+    borderColor: "#F0EDFF",
+    shadowColor: "#6C63FF",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
+    shadowOpacity: 0.07,
     shadowRadius: 12,
-    elevation: 4,
+    elevation: 3,
   },
   calDay: { alignItems: "center", gap: 8 },
-  calLabel: { fontSize: 11, fontWeight: "600", color: "#6B7494" },
+  calLabel: { fontSize: 11, fontWeight: "600", color: "#9CA3AF" },
   calDot: { width: 34, height: 34, borderRadius: 17, alignItems: "center", justifyContent: "center" },
-  calTodayDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: "#FFCA3A" },
+  calTodayDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: COLORS.primary },
 
   // Achievements
   achRow: { gap: 10, paddingHorizontal: 16, paddingBottom: 4 },
 
   // Menu
   menuCard: {
-    backgroundColor: "#171A30",
+    backgroundColor: "#FFFFFF",
     marginHorizontal: 16,
     borderRadius: 20,
     overflow: "hidden",
     borderWidth: 1,
-    borderColor: "#252848",
-    shadowColor: "#000",
+    borderColor: "#F0EDFF",
+    shadowColor: "#6C63FF",
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
+    shadowOpacity: 0.07,
     shadowRadius: 12,
-    elevation: 4,
+    elevation: 3,
   },
   menuItem: { flexDirection: "row", alignItems: "center", gap: 12, padding: 16 },
   menuIconWrap: { width: 38, height: 38, borderRadius: 12, alignItems: "center", justifyContent: "center" },
-  menuLabel: { flex: 1, fontSize: 15, fontWeight: "700", color: "#E8EDF5" },
-  menuDivider: { height: 1, backgroundColor: "#1C1F3B", marginLeft: 66 },
+  menuLabel: { flex: 1, fontSize: 15, fontWeight: "700", color: "#111827" },
+  menuDivider: { height: 1, backgroundColor: "#F8FAFF", marginLeft: 66 },
 
-  version: { textAlign: "center", fontSize: 12, color: "#363B6B", paddingBottom: 8 },
+  version: { textAlign: "center", fontSize: 12, color: "#CBD5E1", paddingBottom: 8 },
 
   chartCard: {
-    backgroundColor: "#171A30", marginHorizontal: 16, borderRadius: 20,
-    padding: 16, borderWidth: 1, borderColor: "#252848",
-    shadowColor: "#000", shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35, shadowRadius: 12, elevation: 4,
+    backgroundColor: "#FFFFFF", marginHorizontal: 16, borderRadius: 20,
+    padding: 16, borderWidth: 1, borderColor: "#F0EDFF",
+    shadowColor: "#6C63FF", shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.07, shadowRadius: 12, elevation: 3,
   },
-  chartTitle: { fontSize: 15, fontWeight: "800", color: "#E8EDF5", marginBottom: 12 },
+  chartTitle: { fontSize: 15, fontWeight: "800", color: "#111827", marginBottom: 12 },
 });
 
 function getCategoryEmoji(category: string): string {

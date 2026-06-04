@@ -325,25 +325,25 @@ const StatBox: React.FC<{ emoji: string; label: string; value: string; color: st
 );
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#0A0C1E" },
+  safe: { flex: 1, backgroundColor: "#F4F5FF" },
   center: { flex: 1, alignItems: "center", justifyContent: "center", gap: 16, padding: 24 },
-  errorText: { fontSize: 15, color: "#6B7494", fontWeight: "600" },
+  errorText: { fontSize: 15, color: "#6B7280", fontWeight: "600" },
   emptyContainer: { flex: 1, alignItems: "center", justifyContent: "center", gap: 16, paddingHorizontal: 32 },
   emptyIconCircle: {
     width: 110, height: 110, borderRadius: 55,
-    backgroundColor: "#171A30", alignItems: "center", justifyContent: "center",
-    borderWidth: 2, borderColor: "#252848",
-    shadowColor: "#000", shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3, shadowRadius: 14, elevation: 6,
+    backgroundColor: "#EEF2FF", alignItems: "center", justifyContent: "center",
+    borderWidth: 2, borderColor: "#C7D2FE",
+    shadowColor: COLORS.primary, shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.15, shadowRadius: 14, elevation: 6,
   },
   emptyEmoji: { fontSize: 52 },
-  emptyTitle: { fontSize: 20, fontWeight: "900", color: "#E8EDF5", textAlign: "center" },
-  emptyDesc: { fontSize: 14, color: "#6B7494", textAlign: "center", lineHeight: 21 },
+  emptyTitle: { fontSize: 20, fontWeight: "900", color: "#111827", textAlign: "center" },
+  emptyDesc: { fontSize: 14, color: "#6B7280", textAlign: "center", lineHeight: 21 },
   emptyBtnWrap: { borderRadius: 14, overflow: "hidden", marginTop: 4 },
   emptyBtn: { flexDirection: "row", alignItems: "center", gap: 8, paddingHorizontal: 24, paddingVertical: 13 },
   emptyBtnText: { fontSize: 15, fontWeight: "800", color: "#FFFFFF" },
   backBtn: { backgroundColor: COLORS.primary, borderRadius: 12, paddingHorizontal: 24, paddingVertical: 12 },
-  backBtnText: { color: "#0A0C1E", fontWeight: "700", fontSize: 15 },
+  backBtnText: { color: "#FFFFFF", fontWeight: "700", fontSize: 15 },
 
   headerBar: {
     flexDirection: "row", alignItems: "center",
@@ -353,22 +353,21 @@ const styles = StyleSheet.create({
   },
   quitBtn: {
     width: 36, height: 36, borderRadius: 12,
-    backgroundColor: "#171A30", alignItems: "center", justifyContent: "center",
-    borderWidth: 1.5, borderColor: "#252848",
+    backgroundColor: "#FFFFFF", alignItems: "center", justifyContent: "center",
+    borderWidth: 1.5, borderColor: "#E2E8F0",
   },
   titleBox: { flex: 1 },
-  headerTitle: { fontSize: 15, fontWeight: "800", color: "#E8EDF5" },
-  modeLabel: { fontSize: 10, fontWeight: "800", color: "#6BCB77", letterSpacing: 1 },
-  topicName: { fontSize: 15, fontWeight: "800", color: "#E8EDF5" },
+  modeLabel: { fontSize: 10, fontWeight: "800", color: "#10B981", letterSpacing: 1 },
+  topicName: { fontSize: 15, fontWeight: "800", color: "#111827" },
   xpPill: {
     flexDirection: "row", alignItems: "center", gap: 4,
-    backgroundColor: "rgba(107,203,119,0.10)", borderWidth: 1.5, borderColor: "rgba(107,203,119,0.3)",
+    backgroundColor: "#F0FDF4", borderWidth: 1.5, borderColor: "#86EFAC",
     paddingHorizontal: 10, paddingVertical: 5, borderRadius: 99,
   },
   xpEmoji: { fontSize: 12 },
-  xpCount: { color: "#6BCB77", fontWeight: "900", fontSize: 13 },
+  xpCount: { color: "#16A34A", fontWeight: "900", fontSize: 13 },
 
-  progressTrack: { marginHorizontal: 16, height: 7, backgroundColor: "#252848", borderRadius: 99, overflow: "hidden" },
+  progressTrack: { marginHorizontal: 16, height: 7, backgroundColor: "#E2E8F0", borderRadius: 99, overflow: "hidden" },
   progressFill: { height: "100%", borderRadius: 99, overflow: "hidden", minWidth: 7 },
 
   stepMeta: {
@@ -377,7 +376,7 @@ const styles = StyleSheet.create({
   },
   qTypePill: { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 99, borderWidth: 1 },
   qTypeText: { fontSize: 12, fontWeight: "700" },
-  stepCounter: { fontSize: 12, fontWeight: "700", color: "#363B6B" },
+  stepCounter: { fontSize: 12, fontWeight: "700", color: "#9CA3AF" },
 
   body: { flex: 1, paddingHorizontal: 16 },
   bodyContent: { paddingTop: 8, paddingBottom: 32, gap: 16 },
@@ -392,9 +391,9 @@ const styles = StyleSheet.create({
   },
   completeBadgeEmoji: { fontSize: 50 },
   completeTextArea: { alignItems: "center", gap: 4 },
-  completeTitle: { fontSize: 26, fontWeight: "900", color: "#E8EDF5" },
+  completeTitle: { fontSize: 26, fontWeight: "900", color: "#111827" },
   completeTopicName: { fontSize: 13, color: COLORS.primary, fontWeight: "700" },
-  completeMessage: { fontSize: 14, color: "#6B7494", textAlign: "center", lineHeight: 20 },
+  completeMessage: { fontSize: 14, color: "#6B7280", textAlign: "center", lineHeight: 20 },
 
   statsRow: { flexDirection: "row", gap: 10 },
   statBox: {
@@ -403,14 +402,14 @@ const styles = StyleSheet.create({
   },
   statEmoji: { fontSize: 18 },
   statValue: { fontSize: 20, fontWeight: "900", letterSpacing: -0.5 },
-  statLabel: { fontSize: 10, color: "#6B7494", fontWeight: "600", textTransform: "uppercase" },
+  statLabel: { fontSize: 10, color: "#6B7280", fontWeight: "600", textTransform: "uppercase" },
 
   practiceNote: {
     flexDirection: "row", alignItems: "center", gap: 8,
-    backgroundColor: "#171A30", borderRadius: 12, padding: 12,
-    borderWidth: 1, borderColor: "#252848",
+    backgroundColor: "#F8FAFF", borderRadius: 12, padding: 12,
+    borderWidth: 1, borderColor: "#E2E8F0",
   },
-  practiceNoteText: { fontSize: 12, color: "#6B7494", flex: 1, fontWeight: "500" },
+  practiceNoteText: { fontSize: 12, color: "#6B7280", flex: 1, fontWeight: "500" },
 
   btns: { gap: 10 },
   restartBtn: {
@@ -424,5 +423,5 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25, shadowRadius: 12, elevation: 7,
   },
   finishBtn: { paddingVertical: 16, alignItems: "center" },
-  finishBtnText: { color: "#0A0C1E", fontWeight: "800", fontSize: 16 },
+  finishBtnText: { color: "#FFFFFF", fontWeight: "800", fontSize: 16 },
 });

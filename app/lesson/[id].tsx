@@ -186,7 +186,7 @@ export default function LessonScreen() {
       <View style={styles.headerBar}>
         {/* Quit button */}
         <TouchableOpacity onPress={handleQuit} style={styles.quitBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Feather name="x" size={20} color="#6B7494" />
+          <Feather name="x" size={20} color="#6B7280" />
         </TouchableOpacity>
 
         {/* Segmented progress dots */}
@@ -347,11 +347,11 @@ const diffPillStyles = StyleSheet.create({
 // ─────────────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#0A0C1E" },
+  safe: { flex: 1, backgroundColor: "#F4F5FF" },
 
   loadingScreen: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12 },
   loadingEmoji: { fontSize: 48 },
-  loadingText: { fontSize: 16, color: "#6B7494", fontWeight: "600" },
+  loadingText: { fontSize: 16, color: "#6B7280", fontWeight: "600" },
 
   // Header bar
   headerBar: {
@@ -366,14 +366,14 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 12,
-    backgroundColor: "#171A30",
+    backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
     borderWidth: 1.5,
-    borderColor: "#252848",
+    borderColor: "#E2E8F0",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.05,
     shadowRadius: 4,
     elevation: 2,
   },
@@ -384,7 +384,7 @@ const styles = StyleSheet.create({
     flex: 1,
     height: 6,
     borderRadius: 3,
-    backgroundColor: "#252848",
+    backgroundColor: "#E2E8F0",
   },
   dotDone: { backgroundColor: COLORS.primary },
   dotActive: {
@@ -397,26 +397,26 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "rgba(255,202,58,0.10)",
+    backgroundColor: "#FEFCE8",
     borderWidth: 1.5,
-    borderColor: "rgba(255,202,58,0.25)",
+    borderColor: "#FDE68A",
     paddingHorizontal: 11,
     paddingVertical: 6,
     borderRadius: 99,
-    shadowColor: "#FFCA3A",
+    shadowColor: "#D97706",
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.12,
     shadowRadius: 5,
     elevation: 2,
   },
   xpEmoji: { fontSize: 13 },
-  xpCount: { color: "#FFCA3A", fontWeight: "900", fontSize: 14 },
+  xpCount: { color: "#92400E", fontWeight: "900", fontSize: 14 },
 
   // Progress bar
   progressTrack: {
     marginHorizontal: 16,
     height: 8,
-    backgroundColor: "#252848",
+    backgroundColor: "#E2E8F0",
     borderRadius: 99,
     overflow: "hidden",
   },
@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     width: 12,
-    backgroundColor: "rgba(255,255,255,0.15)",
+    backgroundColor: "rgba(255,255,255,0.5)",
     borderRadius: 99,
   },
 
@@ -446,16 +446,16 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
   },
   stepTypePill: {
-    backgroundColor: "#171A30",
+    backgroundColor: "#FFFFFF",
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 99,
     borderWidth: 1,
-    borderColor: "#252848",
+    borderColor: "#E2E8F0",
   },
-  stepTypeText: { fontSize: 12, fontWeight: "700", color: "#6B7494" },
+  stepTypeText: { fontSize: 12, fontWeight: "700", color: "#374151" },
   metaRight: { flexDirection: "row", alignItems: "center", gap: 8 },
-  stepCounter: { fontSize: 12, fontWeight: "700", color: "#363B6B" },
+  stepCounter: { fontSize: 12, fontWeight: "700", color: "#9CA3AF" },
 
   // Body
   body: { flex: 1, paddingHorizontal: 16 },

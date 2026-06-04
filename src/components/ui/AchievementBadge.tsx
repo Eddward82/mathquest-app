@@ -18,7 +18,7 @@ export const AchievementBadge: React.FC<AchievementBadgeProps> = ({
       <View
         style={[
           styles.iconContainer,
-          { backgroundColor: unlocked ? COLORS.primaryLight : "#1E2038" },
+          { backgroundColor: unlocked ? COLORS.primaryLight : "#F1F5F9" },
         ]}
       >
         <Feather
