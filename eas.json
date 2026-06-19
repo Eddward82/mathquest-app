@@ -14,7 +14,7 @@
     "production": {
       "env": {
         "NPM_CONFIG_LEGACY_PEER_DEPS": "true",
-        "EXPO_PUBLIC_API_URL": "https://YOUR-PROXY-URL.onrender.com"
+        "EXPO_PUBLIC_API_URL": "https://mathquest-app.onrender.com"
       }
     }
   },
