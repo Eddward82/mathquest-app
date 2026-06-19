@@ -6,7 +6,6 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { scheduleDailyStreakReminder } from "../src/lib/notifications";
 import { useSubscriptionStore } from "../src/store/subscriptionStore";
-import "../src/styles/global.css";
 
 // Keep splash screen up until app is ready
 SplashScreen.preventAutoHideAsync();

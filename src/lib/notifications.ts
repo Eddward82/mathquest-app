@@ -42,10 +42,10 @@ export async function scheduleDailyStreakReminder(hour = 19, minute = 0): Promis
       data: { type: "streak_reminder" },
     },
     trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.DAILY,
       hour,
       minute,
-      repeats: true,
-    } as any,
+    },
   });
 }
 
@@ -74,7 +74,11 @@ export async function scheduleEncouragementNotification(): Promise<void> {
       sound: true,
       data: { type: "encouragement" },
     },
-    trigger: { seconds: 60 * 60 * 48, repeats: false }, // 48 hours after inactivity
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL,
+      seconds: 60 * 60 * 48,
+      repeats: false,
+    }, // 48 hours after inactivity
   });
 }
 
