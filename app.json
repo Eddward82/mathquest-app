@@ -30,7 +30,7 @@
       },
       "package": "com.mathquestapp.learn",
       "googleServicesFile": "./android/app/google-services.json",
-      "versionCode": 32,
+      "versionCode": 33,
       "permissions": [
         "android.permission.INTERNET",
         "android.permission.RECEIVE_BOOT_COMPLETED",
