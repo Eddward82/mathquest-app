@@ -144,8 +144,10 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
   const [status, setStatus] = useState<Status>("idle");
   const [data, setData] = useState<ExplanationData | null>(null);
   const [streamText, setStreamText] = useState("");
+  const [slowHint, setSlowHint] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const lastFetchRef = useRef<number>(0);
+  const slowTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const sheetY = useSharedValue(SCREEN_HEIGHT);
   const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: sheetY.value }] }));
@@ -156,11 +158,12 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
       if (question) fetchExplanation();
     } else {
       sheetY.value = withTiming(SCREEN_HEIGHT, { duration: 280 });
-      // Cancel any in-flight request
       abortRef.current?.abort();
+      if (slowTimerRef.current) clearTimeout(slowTimerRef.current);
       setStatus("idle");
       setData(null);
       setStreamText("");
+      setSlowHint(false);
     }
   }, [visible, question]);
 
@@ -177,6 +180,9 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
     setStatus("loading");
     setData(null);
     setStreamText("");
+    setSlowHint(false);
+    if (slowTimerRef.current) clearTimeout(slowTimerRef.current);
+    slowTimerRef.current = setTimeout(() => setSlowHint(true), 8000);
 
     // AI requests are proxied through our backend so the OpenAI key never
     // ships inside the client bundle. Configure EXPO_PUBLIC_API_URL to point
@@ -204,6 +210,8 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
       if (!response.ok) throw new Error(`API error: ${response.status}`);
 
       // Stream SSE chunks
+      if (slowTimerRef.current) clearTimeout(slowTimerRef.current);
+      setSlowHint(false);
       setStatus("streaming");
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
@@ -288,6 +296,11 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
                 <View style={styles.thinkingCard}>
                   <ThinkingDots />
                   <Text style={styles.thinkingText}>Working through the solution…</Text>
+                  {slowHint && (
+                    <Text style={styles.slowHintText}>
+                      Taking a little longer than usual — almost there...
+                    </Text>
+                  )}
                 </View>
               </Animated.View>
             )}
@@ -520,6 +533,7 @@ const styles = StyleSheet.create({
     width: "100%",
   },
   thinkingText: { color: "#6B7280", fontSize: 14, fontWeight: "600" },
+  slowHintText: { color: "#9CA3AF", fontSize: 12, marginTop: 8, textAlign: "center" },
 
   // Error
   errorContainer: { alignItems: "center", paddingVertical: 32, gap: 10 },
