@@ -31,8 +31,7 @@ import { useSubscriptionStore } from "../../src/store/subscriptionStore";
 import { getLessonById } from "../../src/data/lessons";
 import { COLORS, BORDER_RADIUS } from "../../src/constants/theme";
 import { ExplanationCard } from "../../src/components/lesson/ExplanationCard";
-import { MultipleChoiceQuestion } from "../../src/components/lesson/MultipleChoiceQuestion";
-import { FillBlankQuestion } from "../../src/components/lesson/FillBlankQuestion";
+import { QuizQuestion } from "../../src/components/quiz/QuizQuestion";
 import { LessonComplete } from "../../src/components/lesson/LessonComplete";
 import { AIHelpModal } from "../../src/components/lesson/AIHelpModal";
 import { DifficultyToast } from "../../src/components/lesson/DifficultyToast";
@@ -257,51 +256,40 @@ export default function LessonScreen() {
               onContinue={handleComplete}
             />
           </Animated.View>
-        ) : (
+        ) : isExplain ? (
           <Animated.View
             key={currentStepIndex}
             entering={SlideInRight.duration(280).springify()}
             exiting={SlideOutLeft.duration(200)}
             style={styles.stepContainer}
           >
-            {isExplain ? (
-              <>
-                <ExplanationCard content={currentStep.content as ExplanationContent} />
-                <TouchableOpacity onPress={() => nextStep()} style={styles.gotItBtn} activeOpacity={0.9}>
-                  <LinearGradient
-                    colors={[COLORS.primary, "#8B5CF6"]}
-                    start={{ x: 0, y: 0 }}
-                    end={{ x: 1, y: 0 }}
-                    style={styles.gotItGradient}
-                  >
-                    <Text style={styles.gotItText}>
-                      {currentStepIndex === totalSteps - 1 ? "Finish ✓" : "Got it →"}
-                    </Text>
-                  </LinearGradient>
-                </TouchableOpacity>
-              </>
-            ) : currentStep.type === "multiple_choice" ? (
-              <MultipleChoiceQuestion
-                content={currentStep.content as MultipleChoiceContent}
-                onCorrect={handleCorrect}
-                onMistake={handleMistake}
-                onNext={handleNext}
-                onAIHelp={() => openAIHelp((currentStep.content as MultipleChoiceContent).question)}
-                hintsUsed={hintsUsed}
-                onUseHint={handleUseHint}
-              />
-            ) : (
-              <FillBlankQuestion
-                content={currentStep.content as FillBlankContent}
-                onCorrect={handleCorrect}
-                onMistake={handleMistake}
-                onNext={handleNext}
-                onAIHelp={() => openAIHelp((currentStep.content as FillBlankContent).question)}
-                hintsUsed={hintsUsed}
-                onUseHint={handleUseHint}
-              />
-            )}
+            <ExplanationCard content={currentStep.content as ExplanationContent} />
+            <TouchableOpacity onPress={() => nextStep()} style={styles.gotItBtn} activeOpacity={0.9}>
+              <LinearGradient
+                colors={[COLORS.primary, "#8B5CF6"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.gotItGradient}
+              >
+                <Text style={styles.gotItText}>
+                  {currentStepIndex === totalSteps - 1 ? "Finish ✓" : "Got it →"}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
           </Animated.View>
+        ) : (
+          <QuizQuestion
+            key={currentStepIndex}
+            type={currentStep.type}
+            content={currentStep.content as MultipleChoiceContent | FillBlankContent}
+            onCorrect={handleCorrect}
+            onMistake={handleMistake}
+            onNext={handleNext}
+            onAIHelp={() => openAIHelp((currentStep.content as MultipleChoiceContent).question)}
+            hintsUsed={hintsUsed}
+            onUseHint={handleUseHint}
+            style={styles.stepContainer}
+          />
         )}
       </ScrollView>
 

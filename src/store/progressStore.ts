@@ -3,20 +3,17 @@ import { firestore, userDoc, progressCol, streakDoc, achievementsCol, reviewsCol
 import { TOPICS } from "../data/lessons";
 import { ACHIEVEMENTS } from "../data/achievements";
 import { Achievement, Topic, UserProgress } from "../types";
-import { XP_PER_LEVEL } from "../constants/theme";
 import { DifficultyDelta } from "./lessonStore";
+import {
+  AdaptiveDifficultyLevel,
+  computeLevel,
+  scoreToLevel,
+  clampDifficultyScore,
+  computeStreak,
+} from "../lib/progressMath";
+import { achievementsToUnlock } from "../lib/achievementRules";
 
-// ─── Adaptive difficulty ──────────────────────────────────────────────────────
-// Persisted across sessions as a running net score.
-// Score:  +1 per "increase" event, -1 per "decrease" event.
-// Clamped to [-5, 5]. Converted to a SkillLevel label for display.
-export type AdaptiveDifficultyLevel = "easier" | "normal" | "harder";
-
-function scoreToLevel(score: number): AdaptiveDifficultyLevel {
-  if (score >= 2) return "harder";
-  if (score <= -2) return "easier";
-  return "normal";
-}
+export type { AdaptiveDifficultyLevel };
 
 interface ProgressState {
   // Gamification state
@@ -63,10 +60,6 @@ interface ProgressState {
   checkAndUnlockAchievements: (userId: string) => Promise<void>;
   getTopicsWithProgress: () => Topic[];
   resetProgress: () => void;
-}
-
-function computeLevel(xp: number): number {
-  return Math.floor(xp / XP_PER_LEVEL) + 1;
 }
 
 // Apply completion/locked status to topics based on saved progress
@@ -174,8 +167,8 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
     const newXP = totalXP + xpEarned;
     const newLevel = computeLevel(newXP);
 
-    // Clamp cumulative difficulty score to [-5, 5]
-    const newDiffScore = Math.max(-5, Math.min(5, adaptiveDifficultyScore + difficultyDelta));
+    // Clamp cumulative difficulty score to its valid range
+    const newDiffScore = clampDifficultyScore(adaptiveDifficultyScore + difficultyDelta);
     const newDiffLevel = scoreToLevel(newDiffScore);
 
     set({
@@ -225,14 +218,12 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
     yesterday.setDate(yesterday.getDate() - 1);
     const yStr = yesterday.toISOString().split("T")[0];
 
-    let newStreak: number;
-    if (lastDate === today) {
-      newStreak = streakData.current_streak ?? 1; // already updated today
-    } else if (lastDate === yStr) {
-      newStreak = (streakData.current_streak ?? 0) + 1; // consecutive day
-    } else {
-      newStreak = 1; // streak broken or first ever
-    }
+    const newStreak = computeStreak({
+      lastDate,
+      today,
+      yesterday: yStr,
+      currentStreak: streakData.current_streak ?? 0,
+    });
 
     const longest = Math.max(newStreak, streakData.longest_streak ?? 0);
 
@@ -312,45 +303,23 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
       totalXP,
       currentStreak,
       completedLessonIds,
+      completedReviews,
       unlockAchievement,
     } = get();
 
-    if (lessonsCompleted >= 1) await unlockAchievement(userId, "ach_first_lesson");
-    if (lessonsCompleted >= 25) await unlockAchievement(userId, "ach_lessons_25");
-    if (lessonsCompleted >= 50) await unlockAchievement(userId, "ach_lessons_50");
-    if (currentStreak >= 3) await unlockAchievement(userId, "ach_streak_3");
-    if (currentStreak >= 7) await unlockAchievement(userId, "ach_streak_7");
-    if (currentStreak >= 30) await unlockAchievement(userId, "ach_streak_30");
-    if (totalXP >= 100) await unlockAchievement(userId, "ach_xp_100");
-    if (totalXP >= 500) await unlockAchievement(userId, "ach_xp_500");
-    if (totalXP >= 1000) await unlockAchievement(userId, "ach_xp_1000");
-    if (totalXP >= 2500) await unlockAchievement(userId, "ach_xp_2500");
+    const toUnlock = achievementsToUnlock({
+      lessonsCompleted,
+      currentStreak,
+      totalXP,
+      completedLessonIds,
+      completedReviewsCount: completedReviews.size,
+    });
 
-    // Topic completion achievements
-    const arithmeticLessons = ["lesson_arith_1", "lesson_arith_2", "lesson_arith_3", "lesson_arith_4", "lesson_arith_5"];
-    if (arithmeticLessons.every((id) => completedLessonIds.has(id))) {
-      await unlockAchievement(userId, "ach_arithmetic");
+    // unlockAchievement is idempotent, so unconditionally requesting the full
+    // qualifying set is safe.
+    for (const id of toUnlock) {
+      await unlockAchievement(userId, id);
     }
-    const algebraLessons = ["lesson_alg_1", "lesson_alg_2", "lesson_alg_3", "lesson_alg_4", "lesson_alg_5", "lesson_alg_6", "lesson_alg_7", "lesson_alg_8"];
-    if (algebraLessons.every((id) => completedLessonIds.has(id))) {
-      await unlockAchievement(userId, "ach_algebra");
-    }
-    const geoLessons = ["lesson_geo_1", "lesson_geo_2", "lesson_geo_3", "lesson_geo_4", "lesson_geo_5", "lesson_geo_6", "lesson_geo_7", "lesson_geo_8"];
-    if (geoLessons.every((id) => completedLessonIds.has(id))) {
-      await unlockAchievement(userId, "ach_geometry");
-    }
-    const statLessons = ["lesson_stat_1", "lesson_stat_2", "lesson_stat_3", "lesson_stat_4", "lesson_stat_5", "lesson_stat_6", "lesson_stat_7", "lesson_stat_8"];
-    if (statLessons.every((id) => completedLessonIds.has(id))) {
-      await unlockAchievement(userId, "ach_stats");
-    }
-    const ratioLessons = ["lesson_ratio_1", "lesson_ratio_2", "lesson_ratio_3", "lesson_ratio_4", "lesson_ratio_5"];
-    if (ratioLessons.every((id) => completedLessonIds.has(id))) {
-      await unlockAchievement(userId, "ach_ratio");
-    }
-
-    // Review achievement
-    const { completedReviews } = get();
-    if (completedReviews.size >= 1) await unlockAchievement(userId, "ach_review_first");
   },
 
   getTopicsWithProgress: () => get().topics,

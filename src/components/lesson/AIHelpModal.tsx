@@ -178,44 +178,26 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
     setData(null);
     setStreamText("");
 
-    const apiKey = process.env.EXPO_PUBLIC_OPENAI_KEY;
+    // AI requests are proxied through our backend so the OpenAI key never
+    // ships inside the client bundle. Configure EXPO_PUBLIC_API_URL to point
+    // at the deployed server/index.ts proxy.
+    const apiUrl = process.env.EXPO_PUBLIC_API_URL;
     const safeQuestion = sanitizeQuestion(question);
 
     try {
-      if (!apiKey) throw new Error("No API key");
+      if (!apiUrl) throw new Error("No API URL configured");
 
-      const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      const response = await fetch(`${apiUrl}/api/explain/stream`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
+          // Shared secret checked by the proxy (deters drive-by abuse of the
+          // public endpoint). Configured via EXPO_PUBLIC_APP_PROXY_KEY.
+          ...(process.env.EXPO_PUBLIC_APP_PROXY_KEY
+            ? { "x-app-key": process.env.EXPO_PUBLIC_APP_PROXY_KEY }
+            : {}),
         },
-        body: JSON.stringify({
-          model: "gpt-4o-mini",
-          max_tokens: 700,
-          temperature: 0.4,
-          stream: true,
-          messages: [
-            {
-              role: "system",
-              content: `You are MathQuest Tutor — a friendly, encouraging AI maths teacher for teenagers.
-Explain maths problems clearly using numbered steps. Write in plain text (no JSON, no markdown).
-Format your reply exactly like this:
-
-EMOJI: <one relevant emoji>
-STEP 1: <short title> | <clear explanation>
-STEP 2: <short title> | <clear explanation>
-STEP 3: <short title> | <clear explanation>
-TIP: <one memorable tip>
-
-Use at most 5 steps. Be simple, warm, and encouraging.`,
-            },
-            {
-              role: "user",
-              content: `Explain how to solve this maths question step by step: "${safeQuestion}"`,
-            },
-          ],
-        }),
+        body: JSON.stringify({ question: safeQuestion }),
         signal: controller.signal,
       });
 
@@ -239,9 +221,9 @@ Use at most 5 steps. Be simple, warm, and encouraging.`,
           const payload = line.slice(6);
           if (payload === "[DONE]") break;
           try {
-            const delta = JSON.parse(payload)?.choices?.[0]?.delta?.content;
-            if (delta) {
-              fullText += delta;
+            const parsed = JSON.parse(payload);
+            if (parsed.delta) {
+              fullText += parsed.delta;
               setStreamText(fullText);
             }
           } catch {}

@@ -5,7 +5,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, {
   useAnimatedStyle, useSharedValue, withTiming, withSpring,
-  withSequence, FadeIn, SlideInRight, SlideOutLeft, Easing,
+  withSequence, FadeIn, Easing,
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
@@ -16,8 +16,7 @@ import { getTopicReview, ReviewQuestion, PASS_MARK, REVIEW_XP_REWARD } from "../
 import { TOPICS } from "../../src/data/lessons";
 import { MultipleChoiceContent, FillBlankContent } from "../../src/types";
 import { COLORS, BORDER_RADIUS } from "../../src/constants/theme";
-import { MultipleChoiceQuestion } from "../../src/components/lesson/MultipleChoiceQuestion";
-import { FillBlankQuestion } from "../../src/components/lesson/FillBlankQuestion";
+import { QuizQuestion } from "../../src/components/quiz/QuizQuestion";
 
 export default function TopicReviewScreen() {
   const { topicId } = useLocalSearchParams<{ topicId: string }>();
@@ -199,30 +198,15 @@ export default function TopicReviewScreen() {
             />
           </Animated.View>
         ) : (
-          <Animated.View
+          <QuizQuestion
             key={currentIndex}
-            entering={SlideInRight.duration(280).springify()}
-            exiting={SlideOutLeft.duration(200)}
+            type={currentQ.type}
+            content={currentQ.content as MultipleChoiceContent | FillBlankContent}
+            onCorrect={handleCorrect}
+            onMistake={handleMistake}
+            onNext={handleNext}
             style={styles.questionWrap}
-          >
-            {currentQ.type === "multiple_choice" ? (
-              <MultipleChoiceQuestion
-                content={currentQ.content as MultipleChoiceContent}
-                onCorrect={handleCorrect}
-                onMistake={handleMistake}
-                onNext={handleNext}
-                onAIHelp={() => {}}
-              />
-            ) : (
-              <FillBlankQuestion
-                content={currentQ.content as FillBlankContent}
-                onCorrect={handleCorrect}
-                onMistake={handleMistake}
-                onNext={handleNext}
-                onAIHelp={() => {}}
-              />
-            )}
-          </Animated.View>
+          />
         )}
       </ScrollView>
     </SafeAreaView>
@@ -376,6 +360,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5, borderColor: "#E2E8F0",
   },
   titleBox: { flex: 1 },
+  headerTitle: { flex: 1, textAlign: "center", fontSize: 15, fontWeight: "800", color: "#111827" },
   reviewLabel: { fontSize: 10, fontWeight: "800", color: COLORS.primary, letterSpacing: 1 },
   topicName: { fontSize: 15, fontWeight: "800", color: "#111827" },
   xpPill: {
