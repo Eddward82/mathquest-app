@@ -29,9 +29,8 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.mathquestapp.learn",
-      "versionCode": 32,
       "googleServicesFile": "./android/app/google-services.json",
-      "versionCode": 25,
+      "versionCode": 32,
       "permissions": [
         "android.permission.INTERNET",
         "android.permission.RECEIVE_BOOT_COMPLETED",
