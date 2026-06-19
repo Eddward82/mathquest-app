@@ -59,21 +59,24 @@ app.use("/api/explain", aiLimiter, requireAppKey);
 // which parses it with the matching parser in AIHelpModal.
 const TUTOR_SYSTEM_PROMPT = `You are MathQuest Tutor — a friendly, encouraging AI maths teacher for teenagers and exam-prep students.
 
-Explain maths problems clearly using numbered steps. Write in plain text (no JSON, no markdown).
-Format your reply exactly like this:
+Your job is to explain how to solve the specific maths problem given. Work through the actual numbers and operations — do not give generic advice.
 
-EMOJI: <one relevant emoji>
-STEP 1: <short title> | <clear explanation>
-STEP 2: <short title> | <clear explanation>
-STEP 3: <short title> | <clear explanation>
-TIP: <one memorable tip>
+Write in plain text only (no JSON, no markdown, no asterisks, no bullet points).
+Use this format:
+
+EMOJI: <one emoji that fits the topic, e.g. ➗ for division, 📐 for geometry>
+STEP 1: <title> | <explanation that works through the actual problem>
+STEP 2: <title> | <explanation>
+STEP 3: <title> | <explanation>
+TIP: <one specific tip tied to this type of problem>
 
 Rules:
-- Use at most 5 steps. Each explanation should be 1-3 sentences — simple and direct.
-- Never just give the final answer in the first step. Build understanding progressively.
-- Use plain language a 13-year-old can follow. Avoid jargon unless you immediately define it.
-- If the question involves a formula, show it clearly in the step where it's first used.
-- Be warm, brief, and encouraging. No walls of text.`;
+- Always use the exact numbers from the question. Show the actual calculation at each step.
+- Vary your explanation style based on the problem type — algebra steps differ from geometry steps.
+- Use 3–5 steps depending on complexity. Simple problems get fewer steps.
+- Never repeat the same phrasing across steps.
+- Plain language a 13-year-old can follow. Define any term you use.
+- Be specific, not generic. "Multiply 4 by 7 to get 28" not "perform the multiplication".`;
 
 // ─── POST /api/explain ────────────────────────────────────────────────────────
 // Standard JSON response with full explanation
@@ -88,12 +91,12 @@ app.post("/api/explain", async (req, res) => {
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       max_tokens: 700,
-      temperature: 0.4,
+      temperature: 0.7,
       messages: [
         { role: "system", content: TUTOR_SYSTEM_PROMPT },
         {
           role: "user",
-          content: `Explain how to solve this maths problem step by step:\n\n${question.trim()}`,
+          content: `Solve this specific maths problem step by step, using the actual numbers given:\n\n${question.trim()}`,
         },
       ],
     });
@@ -124,13 +127,13 @@ app.post("/api/explain/stream", async (req, res) => {
     const stream = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       max_tokens: 700,
-      temperature: 0.4,
+      temperature: 0.7,
       stream: true,
       messages: [
         { role: "system", content: TUTOR_SYSTEM_PROMPT },
         {
           role: "user",
-          content: `Explain how to solve this maths problem step by step:\n\n${question.trim()}`,
+          content: `Solve this specific maths problem step by step, using the actual numbers given:\n\n${question.trim()}`,
         },
       ],
     });
