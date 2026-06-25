@@ -16,8 +16,14 @@ ios/build/
 # Android
 android/.gradle
 android/build
+android/build-log.txt
 *.keystore
 !debug.keystore
+
+# Signing credentials — never commit
+*.jks
+*.pem
+upload_cert.pem
 
 # TypeScript
 *.tsbuildinfo
