@@ -1,0 +1,35 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    match /users/{uid} {
+      // Any signed-in user may read profiles — the leaderboard lists top players.
+      allow read: if request.auth != null;
+
+      // Premium entitlement is granted by RevenueCat receipts only; clients may
+      // never write it. The free-lesson counter may only increase, so a user
+      // can't reset their own quota.
+      allow create: if isOwner(uid)
+        && !request.resource.data.keys().hasAny(['is_premium', 'premium_expires_at']);
+
+      allow update: if isOwner(uid)
+        && !request.resource.data.diff(resource.data).affectedKeys()
+            .hasAny(['is_premium', 'premium_expires_at'])
+        && (!request.resource.data.diff(resource.data).affectedKeys()
+              .hasAny(['lessons_started_total'])
+            || request.resource.data.lessons_started_total
+                 >= resource.data.get('lessons_started_total', 0));
+
+      // Account deletion removes the user's own doc.
+      allow delete: if isOwner(uid);
+
+      // progress / streaks / achievements / reviews — owner only.
+      match /{subcollection}/{docId} {
+        allow read, write: if isOwner(uid);
+      }
+    }
+  }
+}

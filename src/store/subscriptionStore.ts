@@ -89,17 +89,14 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
 
       // Remove previous listener before adding a new one to prevent duplicates
       Purchases.removeCustomerInfoUpdateListener(customerInfoListener);
+      // Premium status lives only in RevenueCat (server-verified receipts).
+      // It is never written to Firestore — user docs are client-writable, so
+      // anything stored there could be forged to fake an entitlement.
       customerInfoListener = (info) => {
         const isPremium = isPremiumFromCustomerInfo(info);
         const expiresAt =
           info.entitlements.active["premium"]?.expirationDate ?? null;
         set({ isPremium, premiumExpiresAt: expiresAt });
-
-        if (userId && userId !== "guest") {
-          userDoc(userId)
-            .update({ is_premium: isPremium, premium_expires_at: expiresAt })
-            .catch(() => {});
-        }
       };
       Purchases.addCustomerInfoUpdateListener(customerInfoListener);
 
@@ -150,10 +147,11 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
     if (userId === "guest") return;
 
     try {
-      // Single Firestore fetch reused for both premium fallback and lifetime usage
       const snap = await userDoc(userId).get();
       const data = snap.data() ?? {};
 
+      // Entitlement comes only from RevenueCat (works offline via its on-device
+      // cache). Firestore fields are client-writable and must never grant premium.
       const { isInitialized } = get();
       if (isInitialized) {
         const info = await Purchases.getCustomerInfo();
@@ -161,13 +159,6 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
         const expiresAt =
           info.entitlements.active["premium"]?.expirationDate ?? null;
         set({ isPremium, premiumExpiresAt: expiresAt });
-      } else {
-        // Fallback to Firestore
-        const premiumExpiresAt: string | null = data.premium_expires_at ?? null;
-        const isPremium =
-          data.is_premium === true &&
-          (premiumExpiresAt ? new Date(premiumExpiresAt) > new Date() : false);
-        set({ isPremium, premiumExpiresAt });
       }
 
       const lessonsStartedTotal: number = data.lessons_started_total ?? 0;
@@ -259,15 +250,10 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
     }
   },
 
-  cancelPremium: async (userId) => {
+  cancelPremium: async (_userId) => {
+    // Display state only — real cancellation happens in Google Play and flows
+    // back through RevenueCat's customer-info listener.
     set({ isPremium: false, premiumExpiresAt: null });
-    if (userId === "guest") return;
-    try {
-      await userDoc(userId).update({
-        is_premium: false,
-        premium_expires_at: null,
-      });
-    } catch {}
   },
 
   remainingToday: () => {

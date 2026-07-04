@@ -8,19 +8,21 @@
  */
 
 import express, { Request, Response, NextFunction } from "express";
-import cors from "cors";
 import rateLimit from "express-rate-limit";
 import OpenAI from "openai";
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
 
+// Only the mobile app calls this API, so no CORS headers are served — browsers
+// (the only clients CORS gates) get blocked by default.
+
 // Behind a hosting proxy (Render/Railway/etc.), trust the forwarded IP so the
 // rate limiter keys on the real client address rather than the proxy's.
 app.set("trust proxy", 1);
 
-app.use(cors());
-app.use(express.json());
+// Bound request bodies — a question is never anywhere near 10 KB.
+app.use(express.json({ limit: "10kb" }));
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -54,6 +56,24 @@ function requireAppKey(req: Request, res: Response, next: NextFunction) {
 
 app.use("/api/explain", aiLimiter, requireAppKey);
 
+// The app caps questions at 500 chars; anything much longer is not coming from
+// the app and would only run up OpenAI token costs.
+const MAX_QUESTION_LENGTH = 600;
+
+// Returns the trimmed question, or null after writing a 400 response.
+function validateQuestion(req: Request, res: Response): string | null {
+  const { question } = req.body as { question?: string };
+  if (!question || typeof question !== "string" || question.trim().length === 0) {
+    res.status(400).json({ error: "question is required" });
+    return null;
+  }
+  if (question.length > MAX_QUESTION_LENGTH) {
+    res.status(400).json({ error: `question must be at most ${MAX_QUESTION_LENGTH} characters` });
+    return null;
+  }
+  return question.trim();
+}
+
 // ── System prompt ─────────────────────────────────────────────────────────────
 // Plain-text format (no JSON / markdown) so it streams readably to the client,
 // which parses it with the matching parser in AIHelpModal.
@@ -81,11 +101,8 @@ Rules:
 // ─── POST /api/explain ────────────────────────────────────────────────────────
 // Standard JSON response with full explanation
 app.post("/api/explain", async (req, res) => {
-  const { question } = req.body as { question?: string };
-
-  if (!question || typeof question !== "string" || question.trim().length === 0) {
-    return res.status(400).json({ error: "question is required" });
-  }
+  const question = validateQuestion(req, res);
+  if (question === null) return;
 
   try {
     const completion = await openai.chat.completions.create({
@@ -96,7 +113,7 @@ app.post("/api/explain", async (req, res) => {
         { role: "system", content: TUTOR_SYSTEM_PROMPT },
         {
           role: "user",
-          content: `Solve this specific maths problem step by step, using the actual numbers given:\n\n${question.trim()}`,
+          content: `Solve this specific maths problem step by step, using the actual numbers given:\n\n${question}`,
         },
       ],
     });
@@ -113,11 +130,8 @@ app.post("/api/explain", async (req, res) => {
 // Server-sent events stream — sends the explanation token by token.
 // The client receives "data: <chunk>\n\n" events, then "data: [DONE]\n\n".
 app.post("/api/explain/stream", async (req, res) => {
-  const { question } = req.body as { question?: string };
-
-  if (!question || typeof question !== "string" || question.trim().length === 0) {
-    return res.status(400).json({ error: "question is required" });
-  }
+  const question = validateQuestion(req, res);
+  if (question === null) return;
 
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
@@ -133,7 +147,7 @@ app.post("/api/explain/stream", async (req, res) => {
         { role: "system", content: TUTOR_SYSTEM_PROMPT },
         {
           role: "user",
-          content: `Solve this specific maths problem step by step, using the actual numbers given:\n\n${question.trim()}`,
+          content: `Solve this specific maths problem step by step, using the actual numbers given:\n\n${question}`,
         },
       ],
     });
