@@ -215,28 +215,39 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
       setStatus("streaming");
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
+      let buffer = "";
       let fullText = "";
 
       if (!reader) throw new Error("No reader");
+
+      // SSE events can be split across network chunks, so accumulate into a
+      // buffer and only consume lines that are newline-terminated — the
+      // unterminated tail carries over to the next chunk. decode() with
+      // {stream: true} likewise keeps split multi-byte characters intact.
+      const consumeLine = (line: string) => {
+        if (!line.startsWith("data: ")) return;
+        const payload = line.slice(6).trim();
+        if (payload === "[DONE]") return;
+        try {
+          const parsed = JSON.parse(payload);
+          if (parsed.delta) {
+            fullText += parsed.delta;
+            setStreamText(fullText);
+          }
+        } catch {}
+      };
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
-        const chunk = decoder.decode(value);
-        const lines = chunk.split("\n").filter((l) => l.startsWith("data: "));
-        for (const line of lines) {
-          const payload = line.slice(6);
-          if (payload === "[DONE]") break;
-          try {
-            const parsed = JSON.parse(payload);
-            if (parsed.delta) {
-              fullText += parsed.delta;
-              setStreamText(fullText);
-            }
-          } catch {}
-        }
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+        lines.forEach(consumeLine);
       }
+      buffer += decoder.decode(); // flush any buffered partial character
+      consumeLine(buffer);
 
       if (!fullText.trim()) throw new Error("Empty stream");
 
