@@ -25,20 +25,14 @@ import { Feather } from "@expo/vector-icons";
 // so SSE must go through expo/fetch, which implements ReadableStream.
 import { fetch as streamingFetch } from "expo/fetch";
 import { COLORS, BORDER_RADIUS } from "../../constants/theme";
+import {
+  ExplanationData,
+  ExplanationStep,
+  parseStreamedText,
+  generateLocalExplanation,
+} from "../../lib/explanationParser";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
-
-interface ExplanationStep {
-  number: number;
-  title: string;
-  body: string;
-}
-
-interface ExplanationData {
-  steps: ExplanationStep[];
-  tip: string;
-  emoji: string;
-}
 
 interface AIHelpModalProps {
   visible: boolean;
@@ -407,66 +401,6 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
     </Modal>
   );
 };
-
-// ── Parse plain-text streamed format ──────────────────────────────────────────
-function parseStreamedText(text: string): ExplanationData {
-  const lines = text.split("\n").map((l) => l.trim()).filter(Boolean);
-  let emoji = "📖";
-  let tip = "";
-  const steps: ExplanationStep[] = [];
-
-  for (const line of lines) {
-    if (line.startsWith("EMOJI:")) {
-      emoji = line.slice(6).trim();
-    } else if (line.startsWith("TIP:")) {
-      tip = line.slice(4).trim();
-    } else if (/^STEP \d+:/.test(line)) {
-      const withoutPrefix = line.replace(/^STEP \d+:\s*/, "");
-      const pipeIdx = withoutPrefix.indexOf("|");
-      const title = pipeIdx >= 0 ? withoutPrefix.slice(0, pipeIdx).trim() : withoutPrefix;
-      const body = pipeIdx >= 0 ? withoutPrefix.slice(pipeIdx + 1).trim() : "";
-      steps.push({ number: steps.length + 1, title, body });
-    }
-  }
-
-  if (steps.length === 0) return generateLocalExplanation(text);
-  return { steps, tip, emoji };
-}
-
-// ── Local fallback ─────────────────────────────────────────────────────────────
-function generateLocalExplanation(question: string): ExplanationData {
-  return {
-    emoji: "📖",
-    steps: [
-      {
-        number: 1,
-        title: "Read carefully",
-        body: "Start by reading the question carefully and identifying what is being asked.",
-      },
-      {
-        number: 2,
-        title: "Find the key information",
-        body: `Highlight or note the important numbers and operations in: "${question}"`,
-      },
-      {
-        number: 3,
-        title: "Choose your method",
-        body: "Think about which formula or technique applies here — addition, multiplication, algebra, or geometry?",
-      },
-      {
-        number: 4,
-        title: "Show your working",
-        body: "Write each step clearly. Showing your working helps you spot mistakes and earns marks in exams.",
-      },
-      {
-        number: 5,
-        title: "Check your answer",
-        body: "Substitute your answer back into the original problem to verify it makes sense.",
-      },
-    ],
-    tip: "Still stuck? Try drawing a diagram or working backwards from the answer. Maths always clicks eventually — keep going!",
-  };
-}
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({

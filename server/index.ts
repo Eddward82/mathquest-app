@@ -91,6 +91,8 @@ STEP 3: <title> | <explanation>
 TIP: <one specific tip tied to this type of problem>
 
 Rules:
+- Every step line MUST begin with exactly "STEP <number>: " and stay on a single line — the app parses these markers.
+- The first line MUST begin with exactly "EMOJI: " and the last line with exactly "TIP: ".
 - Always use the exact numbers from the question. Show the actual calculation at each step.
 - Vary your explanation style based on the problem type — algebra steps differ from geometry steps.
 - Use 3–5 steps depending on complexity. Simple problems get fewer steps.
@@ -108,7 +110,7 @@ app.post("/api/explain", async (req, res) => {
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       max_tokens: 700,
-      temperature: 0.7,
+      temperature: 0.5,
       messages: [
         { role: "system", content: TUTOR_SYSTEM_PROMPT },
         {
@@ -141,7 +143,7 @@ app.post("/api/explain/stream", async (req, res) => {
     const stream = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       max_tokens: 700,
-      temperature: 0.7,
+      temperature: 0.5,
       stream: true,
       messages: [
         { role: "system", content: TUTOR_SYSTEM_PROMPT },
