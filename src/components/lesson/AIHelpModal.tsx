@@ -21,6 +21,9 @@ import Animated, {
 } from "react-native-reanimated";
 import { LinearGradient } from "expo-linear-gradient";
 import { Feather } from "@expo/vector-icons";
+// React Native's built-in fetch never exposes response.body (no streaming),
+// so SSE must go through expo/fetch, which implements ReadableStream.
+import { fetch as streamingFetch } from "expo/fetch";
 import { COLORS, BORDER_RADIUS } from "../../constants/theme";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -190,20 +193,23 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
     const apiUrl = process.env.EXPO_PUBLIC_API_URL;
     const safeQuestion = sanitizeQuestion(question);
 
+    // Shared secret checked by the proxy (deters drive-by abuse of the
+    // public endpoint). Configured via EXPO_PUBLIC_APP_PROXY_KEY.
+    const headers = {
+      "Content-Type": "application/json",
+      ...(process.env.EXPO_PUBLIC_APP_PROXY_KEY
+        ? { "x-app-key": process.env.EXPO_PUBLIC_APP_PROXY_KEY }
+        : {}),
+    };
+    const body = JSON.stringify({ question: safeQuestion });
+
     try {
       if (!apiUrl) throw new Error("No API URL configured");
 
-      const response = await fetch(`${apiUrl}/api/explain/stream`, {
+      const response = await streamingFetch(`${apiUrl}/api/explain/stream`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          // Shared secret checked by the proxy (deters drive-by abuse of the
-          // public endpoint). Configured via EXPO_PUBLIC_APP_PROXY_KEY.
-          ...(process.env.EXPO_PUBLIC_APP_PROXY_KEY
-            ? { "x-app-key": process.env.EXPO_PUBLIC_APP_PROXY_KEY }
-            : {}),
-        },
-        body: JSON.stringify({ question: safeQuestion }),
+        headers,
+        body,
         signal: controller.signal,
       });
 
@@ -238,13 +244,41 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
         }
       }
 
+      if (!fullText.trim()) throw new Error("Empty stream");
+
       // Parse the streamed plain-text format
       setData(parseStreamedText(fullText));
       setStatus("done");
     } catch (err: any) {
       if (err?.name === "AbortError") return;
-      setData(generateLocalExplanation(question));
-      setStatus("done");
+
+      // Streaming failed — try the plain JSON endpoint before giving up.
+      // RN's built-in fetch handles this fine (no body streaming involved).
+      try {
+        if (!apiUrl) throw new Error("No API URL configured");
+
+        const response = await fetch(`${apiUrl}/api/explain`, {
+          method: "POST",
+          headers,
+          body,
+          signal: controller.signal,
+        });
+
+        if (!response.ok) throw new Error(`API error: ${response.status}`);
+
+        const { text } = (await response.json()) as { text?: string };
+        if (!text || !text.trim()) throw new Error("Empty response");
+
+        if (slowTimerRef.current) clearTimeout(slowTimerRef.current);
+        setSlowHint(false);
+        setData(parseStreamedText(text));
+        setStatus("done");
+      } catch (err2: any) {
+        if (err2?.name === "AbortError") return;
+        // Both endpoints unreachable — offline-style generic explanation.
+        setData(generateLocalExplanation(question));
+        setStatus("done");
+      }
     }
   };
 
