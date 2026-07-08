@@ -141,6 +141,8 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
   const [data, setData] = useState<ExplanationData | null>(null);
   const [streamText, setStreamText] = useState("");
   const [slowHint, setSlowHint] = useState(false);
+  // Diagnostic detail shown on the error card while debugging field issues.
+  const [errorDetail, setErrorDetail] = useState("");
   const abortRef = useRef<AbortController | null>(null);
   const lastFetchRef = useRef<number>(0);
   const slowTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -160,6 +162,7 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
       setData(null);
       setStreamText("");
       setSlowHint(false);
+      setErrorDetail("");
     }
   }, [visible, question]);
 
@@ -177,6 +180,7 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
     setData(null);
     setStreamText("");
     setSlowHint(false);
+    setErrorDetail("");
     if (slowTimerRef.current) clearTimeout(slowTimerRef.current);
     slowTimerRef.current = setTimeout(() => setSlowHint(true), 8000);
 
@@ -255,7 +259,8 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
       if (!fullText.trim()) throw new Error("Empty stream");
 
       // Parse the streamed plain-text format
-      setData(parseStreamedText(fullText));
+      const parsed = parseStreamedText(fullText);
+      setData({ ...parsed, source: `stream · ${fullText.length}c · ${parsed.source}` });
       setStatus("done");
     } catch (err: any) {
       if (err?.name === "AbortError") return;
@@ -266,7 +271,11 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
       // If the stream died after delivering a real answer, render that
       // answer — never replace text the user is already reading.
       if (fullText.trim().length >= 40) {
-        setData(parseStreamedText(fullText));
+        const parsed = parseStreamedText(fullText);
+        setData({
+          ...parsed,
+          source: `salvage · ${fullText.length}c · ${parsed.source} · ${err?.name}: ${err?.message}`,
+        });
         setStatus("done");
         return;
       }
@@ -288,13 +297,20 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
         const { text } = (await response.json()) as { text?: string };
         if (!text || !text.trim()) throw new Error("Empty response");
 
-        setData(parseStreamedText(text));
+        const parsed = parseStreamedText(text);
+        setData({
+          ...parsed,
+          source: `json · ${text.length}c · ${parsed.source} · stream ${err?.name}: ${err?.message}`,
+        });
         setStatus("done");
       } catch (err2: any) {
         if (err2?.name === "AbortError") return;
         // Both endpoints failed with no usable text — show the retryable
         // error state rather than a canned explanation dressed up as AI.
         console.warn("AI fallback failed:", err2?.name, err2?.message);
+        setErrorDetail(
+          `stream → ${err?.name}: ${err?.message}\njson → ${err2?.name}: ${err2?.message}`
+        );
         setStatus("error");
       }
     }
@@ -369,6 +385,7 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
                 <Text style={{ fontSize: 32 }}>😕</Text>
                 <Text style={styles.errorTitle}>Couldn't get an explanation</Text>
                 <Text style={styles.errorSub}>Check your connection and try again.</Text>
+                {errorDetail ? <Text style={styles.debugLine}>{errorDetail}</Text> : null}
                 <TouchableOpacity onPress={fetchExplanation} style={styles.retryBtn}>
                   <Feather name="refresh-cw" size={14} color={COLORS.primary} />
                   <Text style={styles.retryText}>Try again</Text>
@@ -402,6 +419,8 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
                     </LinearGradient>
                   </Animated.View>
                 ) : null}
+
+                {data.source ? <Text style={styles.debugLine}>{data.source}</Text> : null}
               </View>
             )}
           </ScrollView>
@@ -542,6 +561,9 @@ const styles = StyleSheet.create({
     borderRadius: BORDER_RADIUS.full,
   },
   retryText: { color: COLORS.primary, fontWeight: "700", fontSize: 14 },
+
+  // Diagnostic caption (field debugging)
+  debugLine: { fontSize: 10, color: "#B6B9C6", textAlign: "center", marginTop: 4 },
 
   // Explanation
   explanationContainer: { gap: 14 },

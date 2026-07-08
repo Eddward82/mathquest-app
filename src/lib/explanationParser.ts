@@ -23,6 +23,9 @@ export interface ExplanationData {
   steps: ExplanationStep[];
   tip: string;
   emoji: string;
+  // Diagnostic breadcrumb describing which code path produced this data.
+  // Surfaced as a small caption in the UI while debugging field issues.
+  source?: string;
 }
 
 export function parseStreamedText(text: string): ExplanationData {
@@ -73,17 +76,18 @@ export function parseStreamedText(text: string): ExplanationData {
     // discarding it.
     const full = clean(text);
     if (full.length >= 40) {
-      return { emoji, tip, steps: [{ number: 1, title: "Explanation", body: full }] };
+      return { emoji, tip, steps: [{ number: 1, title: "Explanation", body: full }], source: "raw" };
     }
     return generateLocalExplanation(text);
   }
-  return { steps, tip, emoji };
+  return { steps, tip, emoji, source: `steps:${steps.length}` };
 }
 
 // Offline / no-usable-text fallback. Generic by design — every real AI response
 // should be rendered via parseStreamedText instead.
 export function generateLocalExplanation(question: string): ExplanationData {
   return {
+    source: "local",
     emoji: "📖",
     steps: [
       {
