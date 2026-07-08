@@ -316,6 +316,21 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
     }
   };
 
+  // Parse the stream incrementally so step cards build up live while the
+  // answer arrives — the finished parse then lands in the same layout, so
+  // there is no jarring swap from flowing text to cards at the end. Below
+  // 40 chars the parser would fall back to the generic local explanation,
+  // so until then the raw text view is shown instead.
+  const liveData = React.useMemo(
+    () =>
+      status === "streaming" && streamText.trim().length >= 40
+        ? parseStreamedText(streamText)
+        : null,
+    [status, streamText]
+  );
+  const isStreaming = status === "streaming";
+  const display = status === "done" ? data : liveData;
+
   return (
     <Modal visible={visible} animationType="none" transparent onRequestClose={onClose}>
       <View style={styles.overlay}>
@@ -373,7 +388,7 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
               </Animated.View>
             )}
 
-            {status === "streaming" && streamText.length > 0 && (
+            {isStreaming && !display && streamText.length > 0 && (
               <Animated.View entering={FadeIn} style={styles.streamContainer}>
                 <Text style={styles.streamText}>{streamText}</Text>
                 <ThinkingDots />
@@ -393,34 +408,45 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
               </Animated.View>
             )}
 
-            {status === "done" && data && (
+            {display && (
               <View style={styles.explanationContainer}>
                 {/* Steps */}
                 <View style={styles.stepsHeader}>
-                  <Text style={styles.topicEmoji}>{data.emoji}</Text>
+                  <Text style={styles.topicEmoji}>{display.emoji}</Text>
                   <Text style={styles.stepsTitle}>Step-by-step solution</Text>
                 </View>
 
                 <View style={styles.stepsList}>
-                  {data.steps.map((step, i) => (
-                    <StepCard key={step.number} step={step} delay={i * 80} />
+                  {display.steps.map((step, i) => (
+                    <StepCard
+                      key={step.number}
+                      step={step}
+                      delay={isStreaming ? 0 : i * 80}
+                    />
                   ))}
                 </View>
 
                 {/* Tip card */}
-                {data.tip ? (
-                  <Animated.View entering={FadeInDown.delay(data.steps.length * 80 + 80).springify()} style={styles.tipCard}>
+                {display.tip ? (
+                  <Animated.View
+                    entering={FadeInDown.delay(isStreaming ? 0 : display.steps.length * 80 + 80).springify()}
+                    style={styles.tipCard}
+                  >
                     <LinearGradient
                       colors={["#FEFCE8", "#FEF9C3"]}
                       style={styles.tipGradient}
                     >
                       <Text style={styles.tipIcon}>💡</Text>
-                      <Text style={styles.tipText}>{data.tip}</Text>
+                      <Text style={styles.tipText}>{display.tip}</Text>
                     </LinearGradient>
                   </Animated.View>
                 ) : null}
 
-                {data.source ? <Text style={styles.debugLine}>{data.source}</Text> : null}
+                {isStreaming && <ThinkingDots />}
+
+                {!isStreaming && display.source ? (
+                  <Text style={styles.debugLine}>{display.source}</Text>
+                ) : null}
               </View>
             )}
           </ScrollView>
