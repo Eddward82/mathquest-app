@@ -29,7 +29,6 @@ import {
   ExplanationData,
   ExplanationStep,
   parseStreamedText,
-  generateLocalExplanation,
 } from "../../lib/explanationParser";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
@@ -197,6 +196,11 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
     };
     const body = JSON.stringify({ question: safeQuestion });
 
+    // Accumulates the streamed answer. Hoisted out of the try so the catch
+    // can salvage it — the stream often errors at connection close, after
+    // the whole answer has already arrived.
+    let fullText = "";
+
     try {
       if (!apiUrl) throw new Error("No API URL configured");
 
@@ -216,7 +220,6 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       let buffer = "";
-      let fullText = "";
 
       if (!reader) throw new Error("No reader");
 
@@ -256,8 +259,19 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
       setStatus("done");
     } catch (err: any) {
       if (err?.name === "AbortError") return;
+      console.warn("AI stream failed:", err?.name, err?.message);
+      if (slowTimerRef.current) clearTimeout(slowTimerRef.current);
+      setSlowHint(false);
 
-      // Streaming failed — try the plain JSON endpoint before giving up.
+      // If the stream died after delivering a real answer, render that
+      // answer — never replace text the user is already reading.
+      if (fullText.trim().length >= 40) {
+        setData(parseStreamedText(fullText));
+        setStatus("done");
+        return;
+      }
+
+      // Streaming produced nothing usable — try the plain JSON endpoint.
       // RN's built-in fetch handles this fine (no body streaming involved).
       try {
         if (!apiUrl) throw new Error("No API URL configured");
@@ -274,15 +288,14 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
         const { text } = (await response.json()) as { text?: string };
         if (!text || !text.trim()) throw new Error("Empty response");
 
-        if (slowTimerRef.current) clearTimeout(slowTimerRef.current);
-        setSlowHint(false);
         setData(parseStreamedText(text));
         setStatus("done");
       } catch (err2: any) {
         if (err2?.name === "AbortError") return;
-        // Both endpoints unreachable — offline-style generic explanation.
-        setData(generateLocalExplanation(question));
-        setStatus("done");
+        // Both endpoints failed with no usable text — show the retryable
+        // error state rather than a canned explanation dressed up as AI.
+        console.warn("AI fallback failed:", err2?.name, err2?.message);
+        setStatus("error");
       }
     }
   };
