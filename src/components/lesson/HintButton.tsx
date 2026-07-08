@@ -131,8 +131,10 @@ const styles = StyleSheet.create({
   hintCountText: { fontSize: 10, fontWeight: "900", color: "#FFFFFF" },
 
   aiBtn: {
+    flex: 1,
     flexDirection: "row",
     alignItems: "center",
+    justifyContent: "center",
     gap: 6,
     paddingVertical: 10,
     paddingHorizontal: 14,
