@@ -81,7 +81,7 @@ export const HintButton: React.FC<HintButtonProps> = ({
         {/* AI explain button */}
         <TouchableOpacity onPress={onAIHelp} style={styles.aiBtn} activeOpacity={0.75}>
           <Feather name="cpu" size={14} color={COLORS.primary} />
-          <Text style={styles.aiBtnText}>Explain</Text>
+          <Text style={styles.aiBtnText}>Ask AI</Text>
         </TouchableOpacity>
       </View>
     </View>
