@@ -400,7 +400,6 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
                 <Text style={{ fontSize: 32 }}>😕</Text>
                 <Text style={styles.errorTitle}>Couldn't get an explanation</Text>
                 <Text style={styles.errorSub}>Check your connection and try again.</Text>
-                {errorDetail ? <Text style={styles.debugLine}>{errorDetail}</Text> : null}
                 <TouchableOpacity onPress={fetchExplanation} style={styles.retryBtn}>
                   <Feather name="refresh-cw" size={14} color={COLORS.primary} />
                   <Text style={styles.retryText}>Try again</Text>
@@ -443,10 +442,6 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
                 ) : null}
 
                 {isStreaming && <ThinkingDots />}
-
-                {!isStreaming && display.source ? (
-                  <Text style={styles.debugLine}>{display.source}</Text>
-                ) : null}
               </View>
             )}
           </ScrollView>
