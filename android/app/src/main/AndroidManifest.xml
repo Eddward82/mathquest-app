@@ -6,6 +6,8 @@
   <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" tools:node="remove"/>
   <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" tools:node="remove"/>
   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" tools:node="remove"/>
+  <!-- App has no ads; block Google Play Services / Firebase from collecting the Advertising ID -->
+  <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove"/>
   <queries>
     <intent>
       <action android:name="android.intent.action.VIEW"/>

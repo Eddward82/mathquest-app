@@ -10,7 +10,8 @@ MathQuest ("we", "our", or "us") is committed to protecting your privacy. This P
 Account information: email address, username, and password when you register
 Learning data: lessons completed, XP earned, streaks, quiz scores, and achievements
 Usage data: app activity, lesson progress, and daily challenge completions
-Device information: device type and operating system (for app compatibility)
+Device information: device type, operating system, and device or other identifiers (such as an Android ID or advertising ID) used by our service providers (Google Firebase and RevenueCat) for authentication, app functionality, analytics, and subscription management
+Purchase information: subscription status and transaction identifiers processed through Google Play Billing and RevenueCat when you purchase a subscription (we do not collect or store your card or payment card details)
 3. How We Use Your Information
 
 To create and manage your account
@@ -24,12 +25,14 @@ Your data is stored securely using Google Firebase (Firestore and Authentication
 5. Third-Party Services
 We use the following third-party services:
 
-Google Firebase — authentication and data storage
+Google Firebase (Authentication and Firestore) — account authentication and data storage. Firebase may collect device or other identifiers. See https://firebase.google.com/support/privacy
 Google Sign-In — optional sign-in method
-RevenueCat — subscription and payment processing
-Google Play Billing — in-app purchases
+RevenueCat — subscription management. RevenueCat processes purchase information and device or other identifiers. See https://www.revenuecat.com/privacy
+Google Play Billing — in-app purchase processing
+
+We do not use advertising networks and do not sell your personal data.
 6. Children's Privacy
-MathQuest is designed for students and may be used by children under 13. We do not knowingly collect personal information beyond what is necessary for account creation and learning progress. Parents may contact us to request deletion of their child's data.
+MathQuest is intended for users aged 13 and older. We do not knowingly collect personal information from children under the age of 13. If you believe a child under 13 has provided us with personal information, please contact us and we will delete it.
 
 7. Data Retention
 We retain your data for as long as your account is active. You may request deletion of your account and all associated data by contacting us.
