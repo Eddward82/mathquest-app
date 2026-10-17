@@ -4,12 +4,14 @@
  * Proxies OpenAI API requests so the API key never touches the mobile client.
  * Supports both streaming (SSE) and standard JSON responses.
  *
- * Run with: npx ts-node server/index.ts  (npm run dev / npm start)
+ * Dev: npm run dev (ts-node). Production: npm start (compiles to dist/, runs node).
  */
 
 import express, { Request, Response, NextFunction } from "express";
 import rateLimit from "express-rate-limit";
 import OpenAI from "openai";
+import { initializeApp, applicationDefault, cert, App } from "firebase-admin/app";
+import { getAuth } from "firebase-admin/auth";
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -24,20 +26,56 @@ app.set("trust proxy", 1);
 // Bound request bodies — a question is never anywhere near 10 KB.
 app.use(express.json({ limit: "10kb" }));
 
+// Fail fast instead of holding a connection open on a stuck upstream call.
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
+  timeout: 30_000,
+  maxRetries: 1,
 });
 
 // ── Abuse protection for the AI endpoints ──────────────────────────────────────
 // These run BEFORE the /api/explain* routes below, so they cover both the
 // streaming and non-streaming variants. /api/health is intentionally exempt.
 
-// Per-IP rate limit: 30 requests per 10 minutes.
+// Firebase ID token check. The app sends `Authorization: Bearer <idToken>`;
+// unlike x-app-key it can't be lifted from the bundle, so it proves a real
+// signed-in MathQuest user. Enforced only when REQUIRE_FIREBASE_AUTH=true, so
+// it can be switched on once app versions that send the token are live.
+const REQUIRE_FIREBASE_AUTH = process.env.REQUIRE_FIREBASE_AUTH === "true";
+
+let firebaseApp: App | undefined;
+function getFirebaseApp(): App {
+  // FIREBASE_SERVICE_ACCOUNT holds the service-account JSON (e.g. on Render);
+  // otherwise fall back to GOOGLE_APPLICATION_CREDENTIALS.
+  firebaseApp ??= initializeApp({
+    credential: process.env.FIREBASE_SERVICE_ACCOUNT
+      ? cert(JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT))
+      : applicationDefault(),
+  });
+  return firebaseApp;
+}
+
+async function requireFirebaseUser(req: Request, res: Response, next: NextFunction) {
+  if (!REQUIRE_FIREBASE_AUTH) return next();
+  const match = /^Bearer (.+)$/.exec(req.header("authorization") ?? "");
+  if (!match) return res.status(401).json({ error: "Please sign in to use the AI tutor." });
+  try {
+    const decoded = await getAuth(getFirebaseApp()).verifyIdToken(match[1]);
+    res.locals.uid = decoded.uid;
+    next();
+  } catch {
+    return res.status(401).json({ error: "Your session has expired. Please sign in again." });
+  }
+}
+
+// Rate limit: 30 requests per 10 minutes — per signed-in user when the token
+// was verified (one user can't dodge it by switching networks), else per IP.
 const aiLimiter = rateLimit({
   windowMs: 10 * 60 * 1000,
   max: 30,
   standardHeaders: true,
   legacyHeaders: false,
+  keyGenerator: (req, res) => (res.locals.uid ? `uid:${res.locals.uid}` : req.ip ?? "unknown"),
   message: { error: "Too many requests — please slow down and try again shortly." },
 });
 
@@ -54,7 +92,7 @@ function requireAppKey(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
-app.use("/api/explain", aiLimiter, requireAppKey);
+app.use("/api/explain", requireAppKey, requireFirebaseUser, aiLimiter);
 
 // The app caps questions at 500 chars; anything much longer is not coming from
 // the app and would only run up OpenAI token costs.
@@ -100,12 +138,23 @@ Rules:
 - Plain language a 13-year-old can follow. Define any term you use.
 - Be specific, not generic. "Multiply 4 by 7 to get 28" not "perform the multiplication".`;
 
+// When the user closes the AI tutor mid-answer, the connection drops. Abort the
+// OpenAI call too, so we stop generating (and paying for) tokens nobody reads.
+function abortOnDisconnect(res: Response): AbortSignal {
+  const controller = new AbortController();
+  res.on("close", () => {
+    if (!res.writableFinished) controller.abort();
+  });
+  return controller.signal;
+}
+
 // ─── POST /api/explain ────────────────────────────────────────────────────────
 // Standard JSON response with full explanation
 app.post("/api/explain", async (req, res) => {
   const question = validateQuestion(req, res);
   if (question === null) return;
 
+  const signal = abortOnDisconnect(res);
   try {
     const completion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -118,11 +167,12 @@ app.post("/api/explain", async (req, res) => {
           content: `Solve this specific maths problem step by step, using the actual numbers given:\n\n${question}`,
         },
       ],
-    });
+    }, { signal });
 
     const text = completion.choices[0]?.message?.content ?? "";
     return res.json({ text });
   } catch (err: any) {
+    if (signal.aborted) return; // client left — nothing to send
     console.error("OpenAI error:", err?.message ?? err);
     return res.status(500).json({ error: "Failed to generate explanation" });
   }
@@ -139,6 +189,7 @@ app.post("/api/explain/stream", async (req, res) => {
   res.setHeader("Cache-Control", "no-cache");
   res.setHeader("Connection", "keep-alive");
 
+  const signal = abortOnDisconnect(res);
   try {
     const stream = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -152,7 +203,7 @@ app.post("/api/explain/stream", async (req, res) => {
           content: `Solve this specific maths problem step by step, using the actual numbers given:\n\n${question}`,
         },
       ],
-    });
+    }, { signal });
 
     for await (const chunk of stream) {
       const delta = chunk.choices[0]?.delta?.content ?? "";
@@ -164,6 +215,7 @@ app.post("/api/explain/stream", async (req, res) => {
     res.write("data: [DONE]\n\n");
     res.end();
   } catch (err: any) {
+    if (signal.aborted) return; // client closed the tutor — stream already gone
     console.error("OpenAI stream error:", err?.message ?? err);
     res.write(`data: ${JSON.stringify({ error: "Failed to generate explanation" })}\n\n`);
     res.end();
