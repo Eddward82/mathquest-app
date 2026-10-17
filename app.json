@@ -2,7 +2,7 @@
   "expo": {
     "name": "MathQuest",
     "slug": "mathquest",
-    "version": "1.2.3",
+    "version": "1.2.4",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "mathquest",
@@ -30,7 +30,14 @@
       },
       "package": "com.mathquestapp.learn",
       "googleServicesFile": "./android/app/google-services.json",
-      "versionCode": 44,
+      "versionCode": 45,
+      "allowBackup": false,
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "com.google.android.gms.permission.AD_ID"
+      ],
       "permissions": [
         "android.permission.INTERNET",
         "android.permission.RECEIVE_BOOT_COMPLETED",

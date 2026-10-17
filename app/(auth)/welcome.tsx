@@ -233,7 +233,7 @@ export default function WelcomeScreen() {
             <Text style={styles.sectionTagText}>PRICING</Text>
           </View>
           <Text style={styles.sectionTitle}>Simple pricing,{"\n"}big results</Text>
-          <Text style={styles.sectionSub}>Start free. Upgrade when you're ready.</Text>
+          <Text style={styles.sectionSub}>Start free. Upgrade when you&apos;re ready.</Text>
 
           <View style={styles.pricingRow}>
             {/* Free card */}

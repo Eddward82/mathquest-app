@@ -20,7 +20,7 @@ export default function Index() {
         currentUid.current = fbUser.uid;
         try {
           const snap = await userDoc(fbUser.uid).get();
-          if (snap.exists) {
+          if (snap.exists()) {
             setUser(snap.data() as User);
           } else {
             setUser({

@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    // Transpile each file on its own (no type-check) — tests run in seconds
+    // instead of minutes. `npx tsc --noEmit` still type-checks the app.
+    "isolatedModules": true
+  }
+}

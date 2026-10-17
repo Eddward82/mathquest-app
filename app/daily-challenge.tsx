@@ -87,7 +87,7 @@ export default function DailyChallengeScreen() {
         <Animated.View entering={FadeIn.duration(400)} style={styles.doneContainer}>
           <Text style={styles.doneEmoji}>✅</Text>
           <Text style={styles.doneTitle}>Already completed!</Text>
-          <Text style={styles.doneSub}>You've done today's challenge. Come back tomorrow for a new one.</Text>
+          <Text style={styles.doneSub}>You&apos;ve done today&apos;s challenge. Come back tomorrow for a new one.</Text>
           <TouchableOpacity onPress={() => router.back()} style={styles.doneBtn} activeOpacity={0.85}>
             <LinearGradient colors={[COLORS.primary, "#8B5CF6"]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.doneBtnGrad}>
               <Text style={styles.doneBtnText}>Back to Learning</Text>
@@ -130,7 +130,7 @@ export default function DailyChallengeScreen() {
             <View style={styles.heroRow}>
               <Text style={styles.heroEmoji}>{challenge.topicEmoji}</Text>
               <View style={styles.heroMeta}>
-                <Text style={styles.heroLabel}>TODAY'S CHALLENGE</Text>
+                <Text style={styles.heroLabel}>TODAY&apos;S CHALLENGE</Text>
                 <Text style={styles.heroTitle}>{challenge.title}</Text>
                 <Text style={styles.heroTopic}>{challenge.topic}</Text>
               </View>

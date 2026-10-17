@@ -276,7 +276,7 @@ const PracticeComplete: React.FC<{
       {/* Practice doesn't award XP — note */}
       <View style={styles.practiceNote}>
         <Feather name="info" size={14} color="#6B7280" />
-        <Text style={styles.practiceNoteText}>Practice mode doesn't award XP — it's just for drilling!</Text>
+        <Text style={styles.practiceNoteText}>Practice mode doesn&apos;t award XP — it&apos;s just for drilling!</Text>
       </View>
 
       <View style={styles.btns}>

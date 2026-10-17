@@ -165,8 +165,8 @@ export default function OnboardingScreen() {
 
         {step === 0 && (
           <Animated.View key="step0" entering={enterAnim} exiting={exitAnim} style={styles.stepWrap}>
-            <Text style={styles.title}>What's your skill level?</Text>
-            <Text style={styles.subtitle}>We'll personalise your learning path.</Text>
+            <Text style={styles.title}>What&apos;s your skill level?</Text>
+            <Text style={styles.subtitle}>We&apos;ll personalise your learning path.</Text>
             <View style={styles.cards}>
               {SKILL_LEVELS.map((item) => (
                 <SkillCard
@@ -182,7 +182,7 @@ export default function OnboardingScreen() {
 
         {step === 1 && (
           <Animated.View key="step1" entering={enterAnim} exiting={exitAnim} style={styles.stepWrap}>
-            <Text style={styles.title}>What's your goal?</Text>
+            <Text style={styles.title}>What&apos;s your goal?</Text>
             <Text style={styles.subtitle}>This helps us tailor your experience.</Text>
             <View style={styles.cards}>
               {GOALS.map((item) => (

@@ -6,6 +6,7 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { Feather } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { COLORS } from "../../src/constants/theme";
 import React, { useEffect, memo } from "react";
 
@@ -59,11 +60,19 @@ const TabIcon = memo(function TabIcon({
 });
 
 export default function TabLayout() {
+  // Android 16 (targetSdk 36) always draws edge-to-edge, so the bar must clear
+  // the system navigation bar itself — 3-button nav is much taller than 12px.
+  const insets = useSafeAreaInsets();
+  const androidBottom = Math.max(insets.bottom, 12);
+  const tabBarStyle = Platform.OS === "android"
+    ? [styles.tabBar, { height: 60 + androidBottom, paddingBottom: androidBottom }]
+    : styles.tabBar;
+
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: styles.tabBar,
+        tabBarStyle,
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: "#9CA3AF",
         tabBarLabelStyle: styles.tabLabel,
