@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import { userDoc } from "../lib/firebase";
+import { firestore, userDoc } from "../lib/firebase";
+import { useProgressStore } from "./progressStore";
 import Purchases, {
   PurchasesPackage,
   CustomerInfo,
@@ -10,13 +11,25 @@ import { Platform } from "react-native";
 // ─── Constants ────────────────────────────────────────────────────────────────
 export const FREE_LIFETIME_LIMIT = 5;
 const RC_GOOGLE_KEY = "goog_fEskqSivLsiojXLGnkOyVVPtocp";
-const ENTITLEMENT_POLL_DELAY_MS = 3000;
+const ENTITLEMENT_POLL_DELAY_MS = 2000;
+const ENTITLEMENT_POLL_ATTEMPTS = 3;
 
 // Module-level listener reference so it can be removed before re-adding
 let customerInfoListener: (info: CustomerInfo) => void = () => {};
 
 function isPremiumFromCustomerInfo(info: CustomerInfo): boolean {
   return info.entitlements.active["premium"] !== undefined;
+}
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Only Android has a RevenueCat key; elsewhere every purchase call would throw.
+const NOT_AVAILABLE = "Subscriptions aren't available on this device yet.";
+
+export interface PurchaseResult {
+  success: boolean;
+  /** User-facing message; absent when the user simply cancelled. */
+  error?: string;
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -57,18 +70,20 @@ interface SubscriptionState {
   isInitialized: boolean;
   plans: Plan[];
 
-  // Lifetime usage tracking
+  // Lifetime usage tracking. Each distinct lesson counts once, so reopening a
+  // lesson never uses up another free start.
   lessonsStartedTotal: number;
+  startedLessonIds: Set<string>;
 
   // Actions
   initRevenueCat: (userId: string) => Promise<void>;
   loadSubscription: (userId: string) => Promise<void>;
   loadPlans: () => Promise<void>;
-  canStartLesson: () => boolean;
-  recordLessonStarted: (userId: string) => Promise<void>;
-  purchasePlan: (planId: PlanId) => Promise<{ success: boolean; error?: string }>;
-  restorePurchases: () => Promise<{ success: boolean; error?: string }>;
-  activatePremium: (userId: string, planId: PlanId) => Promise<void>;
+  canStartLesson: (lessonId?: string) => boolean;
+  recordLessonStarted: (userId: string, lessonId: string) => Promise<void>;
+  purchasePlan: (planId: PlanId) => Promise<PurchaseResult>;
+  restorePurchases: () => Promise<PurchaseResult>;
+  activatePremium: (userId: string, planId: PlanId) => Promise<PurchaseResult>;
   cancelPremium: (userId: string) => Promise<void>;
   remainingToday: () => number;
 }
@@ -78,13 +93,15 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
   premiumExpiresAt: null,
   isInitialized: false,
   lessonsStartedTotal: 0,
+  startedLessonIds: new Set(),
   plans: PLANS,
 
   initRevenueCat: async (userId) => {
     try {
-      if (Platform.OS === "android") {
-        await Purchases.configure({ apiKey: RC_GOOGLE_KEY, appUserID: userId || undefined });
-      }
+      // Only Android has a RevenueCat key. Elsewhere stay uninitialized so the
+      // purchase actions report "not available" instead of throwing.
+      if (Platform.OS !== "android") return;
+      await Purchases.configure({ apiKey: RC_GOOGLE_KEY, appUserID: userId || undefined });
       Purchases.setLogLevel(LOG_LEVEL.ERROR);
 
       // Remove previous listener before adding a new one to prevent duplicates
@@ -161,32 +178,44 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
         set({ isPremium, premiumExpiresAt: expiresAt });
       }
 
-      const lessonsStartedTotal: number = data.lessons_started_total ?? 0;
-      set({ lessonsStartedTotal });
+      // lessons_started_total is the pre-1.2.4 counter; started_lesson_ids
+      // replaced it. Take the larger so upgrading never refunds free lessons.
+      const startedLessonIds = new Set<string>(data.started_lesson_ids ?? []);
+      const lessonsStartedTotal = Math.max(data.lessons_started_total ?? 0, startedLessonIds.size);
+      set({ startedLessonIds, lessonsStartedTotal });
     } catch {
       // Offline — keep existing local state
     }
   },
 
-  canStartLesson: () => {
+  canStartLesson: (lessonId) => {
     const { isPremium, lessonsStartedTotal } = get();
     if (isPremium) return true;
+    if (lessonId && isAlreadyCounted(lessonId)) return true;
     return lessonsStartedTotal < FREE_LIFETIME_LIMIT;
   },
 
-  recordLessonStarted: async (userId) => {
-    const { lessonsStartedTotal } = get();
-    const newCount = lessonsStartedTotal + 1;
-    set({ lessonsStartedTotal: newCount });
+  recordLessonStarted: async (userId, lessonId) => {
+    if (isAlreadyCounted(lessonId)) return;
+    const { startedLessonIds, lessonsStartedTotal } = get();
+    set({
+      startedLessonIds: new Set(startedLessonIds).add(lessonId),
+      lessonsStartedTotal: lessonsStartedTotal + 1,
+    });
     if (userId === "guest") return;
     try {
-      await userDoc(userId).update({ lessons_started_total: newCount });
+      // arrayUnion is idempotent and never overwrites with a stale local
+      // count, so it can't trip the "counter may only grow" security rule.
+      await userDoc(userId).update({
+        started_lesson_ids: firestore.FieldValue.arrayUnion(lessonId),
+      });
     } catch {
-      // Offline — local state is still accurate
+      // Offline — the write is queued and local state is already updated
     }
   },
 
   purchasePlan: async (planId) => {
+    if (!get().isInitialized) return { success: false, error: NOT_AVAILABLE };
     try {
       const offerings = await Purchases.getOfferings();
       const current = offerings.current;
@@ -201,27 +230,26 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
         return { success: false, error: "Plan not found" };
       }
 
-      const { customerInfo } = await Purchases.purchasePackage(packageToPurchase);
-      const isPremium = isPremiumFromCustomerInfo(customerInfo);
-      const expiresAt =
-        customerInfo.entitlements.active["premium"]?.expirationDate ?? null;
+      let { customerInfo } = await Purchases.purchasePackage(packageToPurchase);
 
-      if (isPremium) {
-        set({ isPremium: true, premiumExpiresAt: expiresAt });
-      } else {
-        // Entitlement not yet active — poll in background, don't block the UI
-        setTimeout(async () => {
-          try {
-            const refreshed = await Purchases.getCustomerInfo();
-            const isPremiumRefreshed = isPremiumFromCustomerInfo(refreshed);
-            const expiresAtRefreshed =
-              refreshed.entitlements.active["premium"]?.expirationDate ?? null;
-            set({ isPremium: isPremiumRefreshed, premiumExpiresAt: expiresAtRefreshed });
-          } catch {}
-        }, ENTITLEMENT_POLL_DELAY_MS);
+      // Google Play can take a moment to confirm; poll briefly before deciding.
+      for (let i = 0; i < ENTITLEMENT_POLL_ATTEMPTS && !isPremiumFromCustomerInfo(customerInfo); i++) {
+        await sleep(ENTITLEMENT_POLL_DELAY_MS);
+        customerInfo = await Purchases.getCustomerInfo();
       }
 
-      // Always return success immediately after purchase — don't wait for poll
+      if (!isPremiumFromCustomerInfo(customerInfo)) {
+        // Still pending. The customer-info listener unlocks premium as soon
+        // as Google Play confirms, so tell the user rather than claim success.
+        return {
+          success: false,
+          error: "Your purchase is processing. Premium will unlock automatically once Google Play confirms it.",
+        };
+      }
+
+      const expiresAt =
+        customerInfo.entitlements.active["premium"]?.expirationDate ?? null;
+      set({ isPremium: true, premiumExpiresAt: expiresAt });
       return { success: true };
     } catch (e: any) {
       if (e.userCancelled) return { success: false };
@@ -230,6 +258,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
   },
 
   restorePurchases: async () => {
+    if (!get().isInitialized) return { success: false, error: NOT_AVAILABLE };
     try {
       const customerInfo = await Purchases.restorePurchases();
       const isPremium = isPremiumFromCustomerInfo(customerInfo);
@@ -242,13 +271,7 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
     }
   },
 
-  activatePremium: async (userId, planId) => {
-    const { purchasePlan } = get();
-    const result = await purchasePlan(planId);
-    if (!result.success && result.error) {
-      throw new Error(result.error);
-    }
-  },
+  activatePremium: async (_userId, planId) => get().purchasePlan(planId),
 
   cancelPremium: async (_userId) => {
     // Display state only — real cancellation happens in Google Play and flows
@@ -262,3 +285,12 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
     return Math.max(0, FREE_LIFETIME_LIMIT - lessonsStartedTotal);
   },
 }));
+
+// A lesson already started (or finished before per-lesson tracking existed)
+// never costs another free start.
+function isAlreadyCounted(lessonId: string): boolean {
+  return (
+    useSubscriptionStore.getState().startedLessonIds.has(lessonId) ||
+    useProgressStore.getState().completedLessonIds.has(lessonId)
+  );
+}

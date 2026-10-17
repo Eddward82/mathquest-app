@@ -1,0 +1,13 @@
+{
+  "name": "mathquest-firestore-tests",
+  "private": true,
+  "description": "Security-rules tests for ../firestore.rules, run against the Firestore emulator",
+  "scripts": {
+    "test": "firebase emulators:exec --only firestore --project demo-mathquest \"node rules.test.mjs ../firestore.rules\""
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^4.0.1",
+    "firebase": "^11.10.0",
+    "firebase-tools": "^14.0.0"
+  }
+}

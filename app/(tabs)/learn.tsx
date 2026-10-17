@@ -58,7 +58,7 @@ export default function LearnScreen() {
   const filtered = topics.filter((t) => !selectedTopic || t.id === selectedTopic);
 
   const handleLessonPress = (id: string, topicTitle: string) => {
-    if (!canStartLesson()) {
+    if (!canStartLesson(id)) {
       setShowPaywall(true);
       return;
     }
@@ -86,7 +86,7 @@ export default function LearnScreen() {
           >
             <Text style={styles.welcomeEmoji}>🎉</Text>
             <View style={styles.welcomeText}>
-              <Text style={styles.welcomeTitle}>You're all set, {user?.username?.split(" ")[0] ?? "there"}!</Text>
+              <Text style={styles.welcomeTitle}>You&apos;re all set, {user?.username?.split(" ")[0] ?? "there"}!</Text>
               <Text style={styles.welcomeSub}>Your personalised learning path is ready.</Text>
             </View>
             <TouchableOpacity onPress={() => setShowWelcome(false)} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>

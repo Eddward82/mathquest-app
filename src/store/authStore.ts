@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { auth, firestore, userDoc } from "../lib/firebase";
+import { auth, firestore, userDoc, leaderboardDoc, USER_SUBCOLLECTIONS } from "../lib/firebase";
 import { User, SkillLevel, UserGoal, TopicCategory } from "../types";
 import {
   GoogleSignin,
@@ -23,7 +23,8 @@ interface AuthState {
   signIn: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
-  deleteAccount: () => Promise<void>;
+  /** Re-authenticates, then deletes all user data and the login. Throws a user-facing message on failure. */
+  deleteAccount: (password?: string) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateSkillLevel: (level: SkillLevel) => Promise<void>;
   updateOnboarding: (data: { goal: UserGoal; daily_target_minutes: number; focus_topics: TopicCategory[] }) => Promise<void>;
@@ -106,7 +107,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // Fetch Firestore profile
       const snap = await userDoc(fbUser.uid).get();
 
-      if (snap.exists) {
+      if (snap.exists()) {
         set({ user: snap.data() as User, isGuest: false });
       } else {
         // Fallback if profile doc is missing
@@ -142,7 +143,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const { user: fbUser } = await auth().signInWithCredential(googleCredential);
 
       const snap = await userDoc(fbUser.uid).get();
-      if (snap.exists) {
+      if (snap.exists()) {
         const data = snap.data() as User;
         set({ user: data, isGuest: false });
       } else {
@@ -187,19 +188,40 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     }
   },
 
-  deleteAccount: async () => {
-    const { user } = get();
-    if (!user) return;
+  deleteAccount: async (password) => {
+    const fbUser = auth().currentUser;
+    if (!fbUser) return;
     set({ isLoading: true });
     try {
-      await userDoc(user.id).delete();
-      await auth().currentUser?.delete();
+      // Firebase refuses to delete a login that hasn't signed in recently, so
+      // confirm identity first — before any data is touched.
+      if (getSignInMethod() === "google") {
+        await GoogleSignin.hasPlayServices();
+        const result = await GoogleSignin.signIn();
+        const idToken = result.data?.idToken;
+        if (!idToken) throw new AccountDeletionCancelled();
+        await fbUser.reauthenticateWithCredential(auth.GoogleAuthProvider.credential(idToken));
+      } else {
+        if (!password || !fbUser.email) throw new Error("Please enter your password.");
+        await fbUser.reauthenticateWithCredential(
+          auth.EmailAuthProvider.credential(fbUser.email, password)
+        );
+      }
+
+      // Data first (needs the still-valid login to pass security rules),
+      // then the login itself.
+      await deleteUserData(fbUser.uid);
+      await fbUser.delete();
       set({ user: null, isGuest: false });
+    } catch (err: any) {
+      if (isDeletionCancelled(err) || err?.code === statusCodes.SIGN_IN_CANCELLED) {
+        throw new AccountDeletionCancelled();
+      }
+      throw new Error(err?.code ? formatDeletionError(err.code) : err?.message ?? "Something went wrong. Please try again.");
     } finally {
       set({ isLoading: false });
     }
   },
-
 
   resetPassword: async (email) => {
     await auth().sendPasswordResetEmail(email);
@@ -225,6 +247,57 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   setUser: (user) => set({ user }),
   clearError: () => set({ error: null }),
 }));
+
+// ─── Account deletion helpers ────────────────────────────────────────────────
+
+/** Thrown when the user backs out of re-authentication; callers show nothing. */
+export class AccountDeletionCancelled extends Error {
+  constructor() {
+    super("cancelled");
+    this.name = "AccountDeletionCancelled";
+  }
+}
+
+// Checks the name, not instanceof — transpiled Error subclasses can fail
+// instanceof checks.
+export function isDeletionCancelled(err: unknown): boolean {
+  return (err as Error | null)?.name === "AccountDeletionCancelled";
+}
+
+/** How the current user signs in — decides how deletion re-authenticates. */
+export function getSignInMethod(): "google" | "password" {
+  const providers = auth().currentUser?.providerData ?? [];
+  return providers.some((p) => p.providerId === "google.com") ? "google" : "password";
+}
+
+// Firestore never deletes subcollections along with their parent doc, so each
+// one is cleared explicitly. Batches cap at 500 writes.
+async function deleteUserData(uid: string): Promise<void> {
+  const refs = [];
+  for (const sub of USER_SUBCOLLECTIONS) {
+    const snap = await userDoc(uid).collection(sub).get();
+    refs.push(...snap.docs.map((d) => d.ref));
+  }
+  refs.push(leaderboardDoc(uid), userDoc(uid));
+
+  for (let i = 0; i < refs.length; i += 450) {
+    const batch = firestore().batch();
+    refs.slice(i, i + 450).forEach((ref) => batch.delete(ref));
+    await batch.commit();
+  }
+}
+
+function formatDeletionError(code: string): string {
+  switch (code) {
+    case "auth/wrong-password":
+    case "auth/invalid-credential":
+      return "That password is incorrect.";
+    case "auth/user-mismatch":
+      return "Please choose the Google account you signed in with.";
+    default:
+      return formatFirebaseError(code);
+  }
+}
 
 // ─── Map Firebase error codes to user-friendly messages ──────────────────────
 function formatFirebaseError(code: string): string {

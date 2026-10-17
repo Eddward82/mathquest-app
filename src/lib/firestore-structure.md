@@ -66,35 +66,30 @@ One document per unlocked achievement. Document ID = achievement ID.
 
 ---
 
+### `leaderboard/{uid}`
+Public rank entry, readable by any signed-in user. `users/{uid}` is owner-only
+(it holds the email), so the leaderboard reads this instead. Written by
+`syncLeaderboard` in `src/lib/leaderboard.ts`; `firestore.rules` caps each
+write at +200 XP and one write per 10 seconds.
+
+```json
+{
+  "display_name": "mathwiz",
+  "total_xp": 1240,
+  "current_level": 3,
+  "updated_at": "<server timestamp>"
+}
+```
+
+---
+
 ## Firebase Console Setup
 
 1. Go to [console.firebase.google.com](https://console.firebase.google.com)
 2. Create a new project (or use existing)
 3. Enable **Authentication → Email/Password**
 4. Enable **Firestore Database** (start in production mode)
-5. Add these **Firestore Security Rules**:
-
-```
-rules_version = '2';
-service cloud.firestore {
-  match /databases/{database}/documents {
-    // Users can only read/write their own data
-    match /users/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
-
-      match /progress/{lessonId} {
-        allow read, write: if request.auth != null && request.auth.uid == uid;
-      }
-      match /streaks/{doc} {
-        allow read, write: if request.auth != null && request.auth.uid == uid;
-      }
-      match /achievements/{achId} {
-        allow read, write: if request.auth != null && request.auth.uid == uid;
-      }
-    }
-  }
-}
-```
+5. Deploy the security rules in `firestore.rules`: `firebase deploy --only firestore:rules`
 
 6. Download `google-services.json` (Android) → place in `android/app/`
 7. Download `GoogleService-Info.plist` (iOS) → place in `ios/`

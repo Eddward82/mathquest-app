@@ -25,6 +25,7 @@ import { Feather } from "@expo/vector-icons";
 // so SSE must go through expo/fetch, which implements ReadableStream.
 import { fetch as streamingFetch } from "expo/fetch";
 import { COLORS, BORDER_RADIUS } from "../../constants/theme";
+import { auth } from "../../lib/firebase";
 import {
   ExplanationData,
   ExplanationStep,
@@ -192,11 +193,20 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
 
     // Shared secret checked by the proxy (deters drive-by abuse of the
     // public endpoint). Configured via EXPO_PUBLIC_APP_PROXY_KEY.
+    // The Firebase ID token proves a real signed-in user — the proxy verifies
+    // it when REQUIRE_FIREBASE_AUTH is on. If it can't be fetched (offline),
+    // send without it and let the server decide.
+    let idToken: string | undefined;
+    try {
+      idToken = await auth().currentUser?.getIdToken();
+    } catch {}
+
     const headers = {
       "Content-Type": "application/json",
       ...(process.env.EXPO_PUBLIC_APP_PROXY_KEY
         ? { "x-app-key": process.env.EXPO_PUBLIC_APP_PROXY_KEY }
         : {}),
+      ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
     };
     const body = JSON.stringify({ question: safeQuestion });
 
@@ -398,7 +408,7 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
             {status === "error" && (
               <Animated.View entering={FadeIn} style={styles.errorContainer}>
                 <Text style={{ fontSize: 32 }}>😕</Text>
-                <Text style={styles.errorTitle}>Couldn't get an explanation</Text>
+                <Text style={styles.errorTitle}>Couldn&apos;t get an explanation</Text>
                 <Text style={styles.errorSub}>Check your connection and try again.</Text>
                 <TouchableOpacity onPress={fetchExplanation} style={styles.retryBtn}>
                   <Feather name="refresh-cw" size={14} color={COLORS.primary} />

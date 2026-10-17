@@ -12,7 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
-import { firestore } from "../../src/lib/firebase";
+import { firestore, Collections } from "../../src/lib/firebase";
 import { useAuthStore } from "../../src/store/authStore";
 import { COLORS } from "../../src/constants/theme";
 
@@ -49,8 +49,10 @@ export default function LeaderboardScreen() {
 
   const fetchLeaderboard = useCallback(async () => {
     try {
+      // Public entries only — users/{uid} holds private fields (email) and is
+      // readable by its owner alone.
       const snap = await firestore()
-        .collection("users")
+        .collection(Collections.leaderboard)
         .orderBy("total_xp", "desc")
         .limit(50)
         .get();
@@ -59,7 +61,7 @@ export default function LeaderboardScreen() {
         const d = doc.data();
         return {
           uid: doc.id,
-          display_name: d.display_name ?? d.username ?? d.email?.split("@")[0] ?? "Anonymous",
+          display_name: d.display_name ?? "Anonymous",
           total_xp: d.total_xp ?? 0,
           current_level: d.current_level ?? 1,
         };

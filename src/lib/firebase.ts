@@ -17,7 +17,16 @@ export const Collections = {
   streaks: "streaks",             // subcollection: users/{uid}/streaks  (single doc "data")
   achievements: "achievements",   // subcollection: users/{uid}/achievements
   reviews: "reviews",             // subcollection: users/{uid}/reviews
+  leaderboard: "leaderboard",     // top-level: public rank entry per user
 } as const;
+
+// Every subcollection under users/{uid} — account deletion must clear them all.
+export const USER_SUBCOLLECTIONS = [
+  Collections.progress,
+  Collections.streaks,
+  Collections.achievements,
+  Collections.reviews,
+] as const;
 
 // Helper: user document ref
 export const userDoc = (uid: string) =>
@@ -38,6 +47,10 @@ export const achievementsCol = (uid: string) =>
 // Helper: topic reviews subcollection ref under a user
 export const reviewsCol = (uid: string) =>
   userDoc(uid).collection(Collections.reviews);
+
+// Helper: public leaderboard entry for a user (doc ID = uid)
+export const leaderboardDoc = (uid: string) =>
+  firestore().collection(Collections.leaderboard).doc(uid);
 
 // ─── Firestore field name constants ──────────────────────────────────────────
 export const Fields = {

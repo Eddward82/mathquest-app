@@ -23,7 +23,7 @@ import Animated, {
   FadeInDown,
   Easing,
 } from "react-native-reanimated";
-import { useAuthStore } from "../../src/store/authStore";
+import { useAuthStore, getSignInMethod, isDeletionCancelled } from "../../src/store/authStore";
 import Constants from "expo-constants";
 import { useProgressStore } from "../../src/store/progressStore";
 import { scheduleDailyStreakReminder, cancelDailyStreakReminder, requestNotificationPermission } from "../../src/lib/notifications";
@@ -34,6 +34,7 @@ import { COLORS, BORDER_RADIUS, LEVEL_NAMES, XP_PER_LEVEL } from "../../src/cons
 import { AchievementBadge } from "../../src/components/ui/AchievementBadge";
 import { XPBarChart, AccuracyLineChart, TopicProgressBars } from "../../src/components/profile/ProgressCharts";
 import { ShareAchievementModal } from "../../src/components/ui/ShareAchievementModal";
+import { ConfirmPasswordModal } from "../../src/components/profile/ConfirmPasswordModal";
 import { Achievement } from "../../src/types";
 
 const { width } = Dimensions.get("window");
@@ -47,6 +48,9 @@ export default function ProfileScreen() {
   const { isPremium, premiumExpiresAt, remainingToday } = useSubscriptionStore();
   const [notificationsOn, setNotificationsOn] = useState(true);
   const [selectedAchievement, setSelectedAchievement] = useState<Achievement | null>(null);
+  const [passwordPromptOpen, setPasswordPromptOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const xpBarWidth = useSharedValue(0);
   const xpBarStyle = useAnimatedStyle(() => ({ width: `${xpBarWidth.value}%` }));
@@ -90,13 +94,35 @@ export default function ProfileScreen() {
         {
           text: "Delete",
           style: "destructive",
-          onPress: async () => {
-            await deleteAccount();
-            router.replace("/(auth)/welcome");
+          onPress: () => {
+            if (getSignInMethod() === "password") {
+              setDeleteError(null);
+              setPasswordPromptOpen(true);
+            } else {
+              runDeleteAccount();
+            }
           },
         },
       ]
     );
+  };
+
+  const runDeleteAccount = async (password?: string) => {
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteAccount(password);
+      setPasswordPromptOpen(false);
+      router.replace("/(auth)/welcome");
+    } catch (err: any) {
+      if (isDeletionCancelled(err)) return;
+      const message = err?.message ?? "Something went wrong. Please try again.";
+      // Password errors show inline; anything else (e.g. Google) as an alert.
+      if (password !== undefined) setDeleteError(message);
+      else Alert.alert("Couldn't delete account", message);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   const unlockedIds = new Set(unlockedAchievements.map((a) => a.id));
@@ -301,6 +327,14 @@ export default function ProfileScreen() {
         achievement={selectedAchievement}
         username={user?.username ?? user?.email?.split("@")[0] ?? "User"}
         onClose={() => setSelectedAchievement(null)}
+      />
+
+      <ConfirmPasswordModal
+        visible={passwordPromptOpen}
+        loading={deleting}
+        error={deleteError}
+        onConfirm={(password) => runDeleteAccount(password)}
+        onCancel={() => setPasswordPromptOpen(false)}
       />
     </SafeAreaView>
   );

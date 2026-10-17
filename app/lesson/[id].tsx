@@ -49,7 +49,7 @@ export default function LessonScreen() {
   const { canStartLesson, recordLessonStarted, isPremium } = useSubscriptionStore();
 
   // Synchronous gate — checked before any render or effect
-  const allowed = canStartLesson();
+  const allowed = canStartLesson(id);
 
   const {
     activeLesson, currentStepIndex, correctAnswers, mistakes,
@@ -82,7 +82,7 @@ export default function LessonScreen() {
     const lesson = getLessonById(id);
     if (lesson) {
       startLesson(lesson, user?.skill_level ?? "beginner");
-      recordLessonStarted(user?.id ?? "guest");
+      recordLessonStarted(user?.id ?? "guest", lesson.id);
     } else {
       Alert.alert("Error", "Lesson not found");
       router.back();

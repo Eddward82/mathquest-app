@@ -63,16 +63,17 @@ export default function PaywallScreen() {
   const handleSubscribe = async () => {
     if (!user) return;
     setErrorMsg(null);
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setIsLoading(true);
     try {
-      await activatePremium(user.id, selectedPlan);
-      // Navigate immediately — entitlement polling continues in background
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      router.back();
-    } catch (e: any) {
-      if (e.message) setErrorMsg(e.message);
-      // If no error message, user cancelled — just stop loading
+      const result = await activatePremium(user.id, selectedPlan);
+      if (result.success) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        router.back();
+      } else if (result.error) {
+        setErrorMsg(result.error);
+      }
+      // No error = the user cancelled — just stop loading
     } finally {
       setIsLoading(false);
     }
@@ -87,7 +88,7 @@ export default function PaywallScreen() {
       if (result.success) {
         router.back();
       } else {
-        setErrorMsg("No active subscription found to restore.");
+        setErrorMsg(result.error ?? "No active subscription found to restore.");
       }
     } finally {
       setIsLoading(false);
