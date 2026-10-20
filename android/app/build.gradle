@@ -92,14 +92,17 @@ android {
     ndkVersion rootProject.ext.ndkVersion
 
     buildToolsVersion rootProject.ext.buildToolsVersion
-    compileSdk rootProject.ext.compileSdkVersion
+    // Google Play requires Android 16 (API level 36) for current app updates.
+    // Keep this explicit so the checked-in native build cannot inherit an older
+    // Expo default when the release bundle is generated.
+    compileSdk 36
 
     namespace 'com.mathquestapp.learn'
     defaultConfig {
         applicationId 'com.mathquestapp.learn'
         minSdkVersion rootProject.ext.minSdkVersion
-        targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 45
+        targetSdkVersion 36
+        versionCode 46
         versionName "1.2.4"
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
