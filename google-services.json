@@ -30,6 +30,14 @@
           }
         },
         {
+          "client_id": "420810329731-hg7c2dago8ja783i26m4fj52u8e7udj0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mathquestapp.learn",
+            "certificate_hash": "4a90d960d4267337390386a7a2f5f9a0dd9b7fc9"
+          }
+        },
+        {
           "client_id": "420810329731-iak6qhh9jlgrvdrl4ukeb1g06cjt769t.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
