@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -11,8 +11,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { firestore, Collections } from "../../src/lib/firebase";
+import { rankFromHigherScoreCount } from "../../src/lib/rankMath";
 import { useAuthStore } from "../../src/store/authStore";
 import { COLORS } from "../../src/constants/theme";
 
@@ -51,11 +52,11 @@ export default function LeaderboardScreen() {
     try {
       // Public entries only — users/{uid} holds private fields (email) and is
       // readable by its owner alone.
-      const snap = await firestore()
-        .collection(Collections.leaderboard)
-        .orderBy("total_xp", "desc")
-        .limit(50)
-        .get();
+      const leaderboard = firestore().collection(Collections.leaderboard);
+      const [snap, ownSnap] = await Promise.all([
+        leaderboard.orderBy("total_xp", "desc").limit(50).get(),
+        user ? leaderboard.doc(user.id).get() : Promise.resolve(null),
+      ]);
 
       const data: LeaderEntry[] = snap.docs.map((doc) => {
         const d = doc.data();
@@ -69,9 +70,21 @@ export default function LeaderboardScreen() {
 
       setEntries(data);
 
-      if (user) {
-        const rank = data.findIndex((e) => e.uid === user.id);
-        setMyRank(rank >= 0 ? rank + 1 : null);
+      if (user && ownSnap?.exists) {
+        const ownXP = ownSnap.data()?.total_xp;
+        if (typeof ownXP === "number") {
+          // Count only matching index entries; do not download the full
+          // leaderboard just to calculate a user's rank.
+          const higherXP = await leaderboard
+            .where("total_xp", ">", ownXP)
+            .countFromServer()
+            .get();
+          setMyRank(rankFromHigherScoreCount(higherXP.data().count));
+        } else {
+          setMyRank(null);
+        }
+      } else if (user) {
+        setMyRank(null);
       }
     } catch {
       // Offline — keep stale list
@@ -81,9 +94,13 @@ export default function LeaderboardScreen() {
     }
   }, [user]);
 
-  useEffect(() => {
-    fetchLeaderboard();
-  }, [fetchLeaderboard]);
+  // Tab screens stay mounted, so refetch every time the tab gains focus —
+  // otherwise XP earned elsewhere never shows until the app restarts.
+  useFocusEffect(
+    useCallback(() => {
+      fetchLeaderboard();
+    }, [fetchLeaderboard]),
+  );
 
   const onRefresh = () => {
     setRefreshing(true);
