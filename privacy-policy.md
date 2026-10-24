@@ -52,4 +52,4 @@ We may update this Privacy Policy from time to time. We will notify you of signi
 
 11. Contact Us
 If you have any questions about this Privacy Policy, please contact us at:
-📧 support@smartbloomai.online
+📧 support@smartbloomai.org

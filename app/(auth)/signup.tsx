@@ -14,6 +14,7 @@ import { COLORS, BORDER_RADIUS } from "../../src/constants/theme";
 import { Button } from "../../src/components/ui/Button";
 import { TextInput } from "../../src/components/ui/TextInput";
 import { useAuthStore } from "../../src/store/authStore";
+import { AppLogo } from "../../src/components/ui/AppLogo";
 
 export default function SignupScreen() {
   const { signUp, signInWithGoogle, isLoading, error, clearError } = useAuthStore();
@@ -74,6 +75,7 @@ export default function SignupScreen() {
 
         {/* Header */}
         <View style={styles.header}>
+          <AppLogo size={56} style={styles.logo} />
           <Text style={styles.title}>Create account</Text>
           <Text style={styles.subtitle}>
             Join MathQuest and start your learning journey
@@ -171,6 +173,7 @@ const styles = StyleSheet.create({
   container: { padding: 24, gap: 20, paddingBottom: 40 },
   back: { marginBottom: 8 },
   header: { gap: 6 },
+  logo: { marginBottom: 6 },
   title: { fontSize: 28, fontWeight: "800", color: COLORS.textPrimary },
   subtitle: { fontSize: 15, color: COLORS.textSecondary, lineHeight: 22 },
   form: { gap: 16 },

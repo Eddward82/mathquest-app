@@ -301,7 +301,7 @@ export default function ProfileScreen() {
             />
           </View>
           <View style={styles.menuDivider} />
-          <MenuItem icon="help-circle" label="Help & Support" color="#0EA5E9" onPress={() => Linking.openURL("mailto:support@smartbloomai.online?subject=MathQuest%20Support")} />
+          <MenuItem icon="help-circle" label="Help & Support" color="#0EA5E9" onPress={() => Linking.openURL("mailto:support@smartbloomai.org?subject=MathQuest%20Support")} />
           <View style={styles.menuDivider} />
           <MenuItem icon="star" label="Rate MathQuest" color="#D97706" onPress={() => Linking.openURL("market://details?id=com.mathquestapp.learn")} />
           <View style={styles.menuDivider} />

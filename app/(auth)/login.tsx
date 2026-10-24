@@ -14,6 +14,7 @@ import { COLORS, BORDER_RADIUS } from "../../src/constants/theme";
 import { Button } from "../../src/components/ui/Button";
 import { TextInput } from "../../src/components/ui/TextInput";
 import { useAuthStore } from "../../src/store/authStore";
+import { AppLogo } from "../../src/components/ui/AppLogo";
 
 export default function LoginScreen() {
   const { signIn, signInWithGoogle, resetPassword, isLoading, error, clearError } = useAuthStore();
@@ -96,7 +97,7 @@ export default function LoginScreen() {
 
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.emoji}>👋</Text>
+          <AppLogo size={72} />
           <Text style={styles.title}>Welcome back!</Text>
           <Text style={styles.subtitle}>
             Sign in to continue your learning streak
@@ -190,7 +191,6 @@ const styles = StyleSheet.create({
   container: { padding: 24, gap: 20, paddingBottom: 40 },
   back: { marginBottom: 8 },
   header: { alignItems: "center", gap: 8, paddingVertical: 12 },
-  emoji: { fontSize: 48 },
   title: { fontSize: 28, fontWeight: "800", color: COLORS.textPrimary },
   subtitle: { fontSize: 15, color: COLORS.textSecondary, textAlign: "center" },
   form: { gap: 16 },

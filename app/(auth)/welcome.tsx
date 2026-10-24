@@ -23,6 +23,7 @@ import Animated, {
   FadeInDown,
 } from "react-native-reanimated";
 import { COLORS, BORDER_RADIUS } from "../../src/constants/theme";
+import { AppLogo } from "../../src/components/ui/AppLogo";
 import { useSubscriptionStore } from "../../src/store/subscriptionStore";
 
 const { width, height } = Dimensions.get("window");
@@ -123,12 +124,7 @@ export default function WelcomeScreen() {
           <SafeAreaView style={styles.heroInner}>
             {/* Logo */}
             <Animated.View style={[styles.logoWrapper, logoStyle]}>
-              <LinearGradient
-                colors={["rgba(255,255,255,0.35)", "rgba(255,255,255,0.15)"]}
-                style={styles.logoGlass}
-              >
-                <Text style={styles.logoEmoji}>🧮</Text>
-              </LinearGradient>
+              <AppLogo size={100} />
               <View style={styles.logoGlow} />
             </Animated.View>
 
@@ -295,12 +291,15 @@ export default function WelcomeScreen() {
 
         {/* ── FOOTER ───────────────────────────────────────────────────── */}
         <View style={styles.footer}>
-          <Text style={styles.footerLogo}>🧮 MathQuest</Text>
+          <View style={styles.footerBrand}>
+            <AppLogo size={24} />
+            <Text style={styles.footerLogo}>MathQuest</Text>
+          </View>
           <Text style={styles.footerText}>
             &copy; 2026 MathQuest. All rights reserved.
           </Text>
           <Text style={styles.footerText}>
-            support@smartbloomai.online
+            support@smartbloomai.org
           </Text>
         </View>
       </ScrollView>
@@ -384,16 +383,10 @@ const styles = StyleSheet.create({
   },
   bubbleText: { color: "#fff", fontWeight: "700" },
   logoWrapper: { alignItems: "center", justifyContent: "center" },
-  logoGlass: {
-    width: 100, height: 100, borderRadius: 28,
-    alignItems: "center", justifyContent: "center",
-    borderWidth: 1.5, borderColor: "rgba(255,255,255,0.4)",
-  },
   logoGlow: {
     position: "absolute", width: 120, height: 120,
     borderRadius: 34, backgroundColor: "rgba(255,255,255,0.08)", zIndex: -1,
   },
-  logoEmoji: { fontSize: 50 },
   badge: {
     backgroundColor: "rgba(255,255,255,0.18)",
     borderWidth: 1, borderColor: "rgba(255,255,255,0.3)",
@@ -539,6 +532,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#111827", paddingVertical: 32, paddingHorizontal: 24,
     alignItems: "center", gap: 8,
   },
-  footerLogo: { fontSize: 18, fontWeight: "900", color: "#fff", marginBottom: 4 },
+  footerBrand: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 },
+  footerLogo: { fontSize: 18, fontWeight: "900", color: "#fff" },
   footerText: { fontSize: 13, color: "#6B7280", textAlign: "center" },
 });

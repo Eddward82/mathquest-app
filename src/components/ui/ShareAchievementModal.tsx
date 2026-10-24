@@ -9,6 +9,7 @@ import * as Sharing from "expo-sharing";
 import { captureRef } from "react-native-view-shot";
 import { Achievement } from "../../types";
 import { COLORS, BORDER_RADIUS } from "../../constants/theme";
+import { AppLogo } from "./AppLogo";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -83,7 +84,7 @@ export const ShareAchievementModal: React.FC<ShareAchievementModalProps> = ({
 
               {/* App name */}
               <View style={styles.appRow}>
-                <Text style={styles.appIcon}>🧮</Text>
+                <AppLogo size={20} />
                 <Text style={styles.appName}>MathQuest</Text>
               </View>
 
@@ -192,7 +193,6 @@ const styles = StyleSheet.create({
   },
 
   appRow: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 },
-  appIcon: { fontSize: 16 },
   appName: { fontSize: 14, fontWeight: "800", color: "rgba(255,255,255,0.8)", letterSpacing: 0.5 },
 
   badgeCircle: {
