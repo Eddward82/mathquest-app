@@ -102,8 +102,8 @@ android {
         applicationId 'com.mathquestapp.learn'
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion 36
-        versionCode 46
-        versionName "1.2.4"
+        versionCode 48
+        versionName "1.2.6"
 
         buildConfigField "String", "REACT_NATIVE_RELEASE_LEVEL", "\"${findProperty('reactNativeReleaseLevel') ?: 'stable'}\""
     }
