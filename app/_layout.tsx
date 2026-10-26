@@ -1,11 +1,15 @@
-import { useEffect, Component, ReactNode } from "react";
+import { useEffect, useRef, Component, ReactNode } from "react";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, AppState, AppStateStatus } from "react-native";
 import { scheduleDailyStreakReminder } from "../src/lib/notifications";
+import { auth, userDoc } from "../src/lib/firebase";
+import { useAuthStore } from "../src/store/authStore";
 import { useSubscriptionStore } from "../src/store/subscriptionStore";
+import { useProgressStore } from "../src/store/progressStore";
+import { User } from "../src/types";
 
 // Keep splash screen up until app is ready
 SplashScreen.preventAutoHideAsync();
@@ -41,12 +45,77 @@ const errorStyles = StyleSheet.create({
 
 export default function RootLayout() {
   const { initRevenueCat } = useSubscriptionStore();
+  const currentUid = useRef<string | null>(null);
 
   useEffect(() => {
     SplashScreen.hideAsync();
     scheduleDailyStreakReminder(19, 0).catch(() => {});
     // Initialize RevenueCat early so paywall works even before login
     initRevenueCat("").catch(() => {});
+  }, []);
+
+  // Lives here rather than in app/index.tsx: the index screen unmounts as soon
+  // as it redirects, which killed the listener, so signing in afterwards never
+  // loaded the new account and it kept the previous account's lesson count.
+  useEffect(() => {
+    const { setUser } = useAuthStore.getState();
+    const { loadSubscription, initRevenueCat, reset: resetSubscription } = useSubscriptionStore.getState();
+    const { loadProgress, resetProgress } = useProgressStore.getState();
+
+    const unsubscribe = auth().onAuthStateChanged(async (fbUser) => {
+      if (fbUser) {
+        if (currentUid.current !== fbUser.uid) {
+          resetSubscription();
+          resetProgress();
+        }
+        currentUid.current = fbUser.uid;
+        try {
+          const snap = await userDoc(fbUser.uid).get();
+          if (snap.exists()) {
+            setUser(snap.data() as User);
+          } else {
+            setUser({
+              id: fbUser.uid,
+              email: fbUser.email ?? "",
+              username: fbUser.displayName ?? fbUser.email?.split("@")[0] ?? "User",
+              skill_level: "beginner",
+              created_at: fbUser.metadata.creationTime ?? new Date().toISOString(),
+            });
+          }
+        } catch {
+          setUser({
+            id: fbUser.uid,
+            email: fbUser.email ?? "",
+            username: fbUser.displayName ?? "User",
+            skill_level: "beginner",
+            created_at: new Date().toISOString(),
+          });
+        }
+
+        await initRevenueCat(fbUser.uid);
+        await Promise.allSettled([
+          loadSubscription(fbUser.uid),
+          loadProgress(fbUser.uid),
+        ]);
+      } else {
+        currentUid.current = null;
+        resetSubscription();
+        resetProgress();
+        setUser(null);
+      }
+    });
+
+    // Re-check premium status every time the app comes back to foreground
+    const appStateListener = AppState.addEventListener("change", (state: AppStateStatus) => {
+      if (state === "active" && currentUid.current) {
+        loadSubscription(currentUid.current).catch(() => {});
+      }
+    });
+
+    return () => {
+      unsubscribe();
+      appStateListener.remove();
+    };
   }, []);
 
   return (

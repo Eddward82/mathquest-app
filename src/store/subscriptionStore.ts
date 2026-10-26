@@ -86,6 +86,8 @@ interface SubscriptionState {
   activatePremium: (userId: string, planId: PlanId) => Promise<PurchaseResult>;
   cancelPremium: (userId: string) => Promise<void>;
   remainingToday: () => number;
+  /** Clears the previous account's state when the signed-in user changes. */
+  reset: () => void;
 }
 
 export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
@@ -283,6 +285,15 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
     const { isPremium, lessonsStartedTotal } = get();
     if (isPremium) return Infinity;
     return Math.max(0, FREE_LIFETIME_LIMIT - lessonsStartedTotal);
+  },
+
+  reset: () => {
+    set({
+      isPremium: false,
+      premiumExpiresAt: null,
+      lessonsStartedTotal: 0,
+      startedLessonIds: new Set(),
+    });
   },
 }));
 
