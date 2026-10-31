@@ -26,6 +26,7 @@ import { Feather } from "@expo/vector-icons";
 import { fetch as streamingFetch } from "expo/fetch";
 import { COLORS, BORDER_RADIUS } from "../../constants/theme";
 import { auth } from "../../lib/firebase";
+import { getAppCheckToken } from "../../lib/appCheck";
 import {
   ExplanationData,
   ExplanationStep,
@@ -196,10 +197,13 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
     // The Firebase ID token proves a real signed-in user — the proxy verifies
     // it when REQUIRE_FIREBASE_AUTH is on. If it can't be fetched (offline),
     // send without it and let the server decide.
+    // The App Check token proves the request comes from the genuine app — the
+    // proxy verifies it when REQUIRE_APP_CHECK is on.
     let idToken: string | undefined;
     try {
       idToken = await auth().currentUser?.getIdToken();
     } catch {}
+    const appCheckToken = await getAppCheckToken();
 
     const headers = {
       "Content-Type": "application/json",
@@ -207,6 +211,7 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
         ? { "x-app-key": process.env.EXPO_PUBLIC_APP_PROXY_KEY }
         : {}),
       ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
+      ...(appCheckToken ? { "X-Firebase-AppCheck": appCheckToken } : {}),
     };
     const body = JSON.stringify({ question: safeQuestion });
 

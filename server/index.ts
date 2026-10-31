@@ -12,6 +12,7 @@ import rateLimit from "express-rate-limit";
 import OpenAI from "openai";
 import { initializeApp, applicationDefault, cert, App } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
+import { getAppCheck } from "firebase-admin/app-check";
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -68,6 +69,28 @@ async function requireFirebaseUser(req: Request, res: Response, next: NextFuncti
   }
 }
 
+// Firebase App Check. The app sends `X-Firebase-AppCheck: <token>`, which only
+// the genuine Play-installed app can obtain (Play Integrity), so scripts that
+// copied x-app-key or a user's ID token are still turned away. Enforced only
+// when REQUIRE_APP_CHECK=true; until then failures are just logged, so the
+// App Check dashboard can confirm real users pass before switching it on.
+const REQUIRE_APP_CHECK = process.env.REQUIRE_APP_CHECK === "true";
+
+async function requireAppCheck(req: Request, res: Response, next: NextFunction) {
+  const token = req.header("x-firebase-appcheck");
+  try {
+    if (!token) throw new Error("missing token");
+    await getAppCheck(getFirebaseApp()).verifyToken(token);
+    next();
+  } catch (err: any) {
+    if (!REQUIRE_APP_CHECK) {
+      console.warn("App Check not verified (not enforced):", err?.message);
+      return next();
+    }
+    return res.status(401).json({ error: "Please update MathQuest from Google Play to use the AI tutor." });
+  }
+}
+
 // Rate limit: 30 requests per 10 minutes — per signed-in user when the token
 // was verified (one user can't dodge it by switching networks), else per IP.
 const aiLimiter = rateLimit({
@@ -92,7 +115,7 @@ function requireAppKey(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
-app.use("/api/explain", requireAppKey, requireFirebaseUser, aiLimiter);
+app.use("/api/explain", requireAppKey, requireAppCheck, requireFirebaseUser, aiLimiter);
 
 // The app caps questions at 500 chars; anything much longer is not coming from
 // the app and would only run up OpenAI token costs.

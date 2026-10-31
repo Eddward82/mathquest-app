@@ -6,6 +6,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { View, Text, TouchableOpacity, StyleSheet, AppState, AppStateStatus } from "react-native";
 import { scheduleDailyStreakReminder } from "../src/lib/notifications";
 import { auth, userDoc } from "../src/lib/firebase";
+import { initAppCheck } from "../src/lib/appCheck";
 import { useAuthStore } from "../src/store/authStore";
 import { useSubscriptionStore } from "../src/store/subscriptionStore";
 import { useProgressStore } from "../src/store/progressStore";
@@ -13,6 +14,9 @@ import { User } from "../src/types";
 
 // Keep splash screen up until app is ready
 SplashScreen.preventAutoHideAsync();
+
+// Start App Check before the first Auth/Firestore request so they carry a token.
+initAppCheck();
 
 class ErrorBoundary extends Component<{ children: ReactNode }, { hasError: boolean }> {
   state = { hasError: false };
