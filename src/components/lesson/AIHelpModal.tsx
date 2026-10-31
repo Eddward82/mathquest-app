@@ -145,6 +145,9 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
   const [slowHint, setSlowHint] = useState(false);
   // Diagnostic detail shown on the error card while debugging field issues.
   const [errorDetail, setErrorDetail] = useState("");
+  // Set when the proxy refuses with 429 (daily limit / tutor paused) — shown
+  // instead of the generic connection error, since retrying won't help.
+  const [limitMessage, setLimitMessage] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const lastFetchRef = useRef<number>(0);
   const slowTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -165,6 +168,7 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
       setStreamText("");
       setSlowHint(false);
       setErrorDetail("");
+      setLimitMessage(null);
     }
   }, [visible, question]);
 
@@ -183,6 +187,7 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
     setStreamText("");
     setSlowHint(false);
     setErrorDetail("");
+    setLimitMessage(null);
     if (slowTimerRef.current) clearTimeout(slowTimerRef.current);
     slowTimerRef.current = setTimeout(() => setSlowHint(true), 8000);
 
@@ -230,6 +235,14 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
         signal: controller.signal,
       });
 
+      if (response.status === 429) {
+        let message = "You've reached today's AI tutor limit. Please try again tomorrow.";
+        try {
+          const parsed = JSON.parse(await response.text());
+          if (typeof parsed?.error === "string") message = parsed.error;
+        } catch {}
+        throw Object.assign(new Error("Rate limited"), { limitMessage: message });
+      }
       if (!response.ok) throw new Error(`API error: ${response.status}`);
 
       // Stream SSE chunks
@@ -282,6 +295,13 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
       console.warn("AI stream failed:", err?.name, err?.message);
       if (slowTimerRef.current) clearTimeout(slowTimerRef.current);
       setSlowHint(false);
+
+      // Over the daily limit — the JSON endpoint would refuse too.
+      if (err?.limitMessage) {
+        setLimitMessage(err.limitMessage);
+        setStatus("error");
+        return;
+      }
 
       // If the stream died after delivering a real answer, render that
       // answer — never replace text the user is already reading.
@@ -413,12 +433,18 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
             {status === "error" && (
               <Animated.View entering={FadeIn} style={styles.errorContainer}>
                 <Text style={{ fontSize: 32 }}>😕</Text>
-                <Text style={styles.errorTitle}>Couldn&apos;t get an explanation</Text>
-                <Text style={styles.errorSub}>Check your connection and try again.</Text>
-                <TouchableOpacity onPress={fetchExplanation} style={styles.retryBtn}>
-                  <Feather name="refresh-cw" size={14} color={COLORS.primary} />
-                  <Text style={styles.retryText}>Try again</Text>
-                </TouchableOpacity>
+                <Text style={styles.errorTitle}>
+                  {limitMessage ? "Daily limit reached" : "Couldn’t get an explanation"}
+                </Text>
+                <Text style={styles.errorSub}>
+                  {limitMessage ?? "Check your connection and try again."}
+                </Text>
+                {!limitMessage && (
+                  <TouchableOpacity onPress={fetchExplanation} style={styles.retryBtn}>
+                    <Feather name="refresh-cw" size={14} color={COLORS.primary} />
+                    <Text style={styles.retryText}>Try again</Text>
+                  </TouchableOpacity>
+                )}
               </Animated.View>
             )}
 

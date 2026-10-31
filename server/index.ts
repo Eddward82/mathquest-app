@@ -13,6 +13,7 @@ import OpenAI from "openai";
 import { initializeApp, applicationDefault, cert, App } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getAppCheck } from "firebase-admin/app-check";
+import { reserveAiCall } from "./usageGuard";
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -176,6 +177,7 @@ function abortOnDisconnect(res: Response): AbortSignal {
 app.post("/api/explain", async (req, res) => {
   const question = validateQuestion(req, res);
   if (question === null) return;
+  if (!(await reserveAiCall(getFirebaseApp(), req, res))) return;
 
   const signal = abortOnDisconnect(res);
   try {
@@ -207,6 +209,7 @@ app.post("/api/explain", async (req, res) => {
 app.post("/api/explain/stream", async (req, res) => {
   const question = validateQuestion(req, res);
   if (question === null) return;
+  if (!(await reserveAiCall(getFirebaseApp(), req, res))) return;
 
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
