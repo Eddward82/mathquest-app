@@ -133,6 +133,7 @@ export default function LoginScreen() {
             error={errors.email}
             keyboardType="email-address"
             autoCapitalize="none"
+            testID="login_email"
           />
           <TextInput
             label="Password"
@@ -142,6 +143,7 @@ export default function LoginScreen() {
             onChangeText={(t) => setForm({ ...form, password: t })}
             error={errors.password}
             secureToggle
+            testID="login_password"
           />
         </View>
 
@@ -156,6 +158,7 @@ export default function LoginScreen() {
           size="lg"
           fullWidth
           loading={isLoading}
+          testID="login_submit"
         />
 
         <View style={styles.divider}>

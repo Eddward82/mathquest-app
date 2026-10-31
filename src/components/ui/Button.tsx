@@ -20,6 +20,7 @@ interface ButtonProps {
   loading?: boolean;
   icon?: React.ReactNode;
   fullWidth?: boolean;
+  testID?: string;
 }
 
 const SIZE: Record<Size, { px: number; py: number; fontSize: number; radius: number }> = {
@@ -41,7 +42,7 @@ const AnimatedTouchable = Animated.createAnimatedComponent(TouchableOpacity);
 
 export const Button: React.FC<ButtonProps> = ({
   title, onPress, variant = "primary", size = "md",
-  disabled = false, loading = false, icon, fullWidth = false,
+  disabled = false, loading = false, icon, fullWidth = false, testID,
 }) => {
   const scale = useSharedValue(1);
   const s = SIZE[size];
@@ -62,6 +63,7 @@ export const Button: React.FC<ButtonProps> = ({
 
   return (
     <AnimatedTouchable
+      testID={testID}
       onPress={onPress}
       onPressIn={onPressIn}
       onPressOut={onPressOut}
