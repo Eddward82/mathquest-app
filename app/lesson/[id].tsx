@@ -7,6 +7,7 @@ import {
   Alert,
   Platform,
   ScrollView,
+  Pressable,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, {
@@ -15,6 +16,7 @@ import Animated, {
   withTiming,
   withSpring,
   withSequence,
+  withRepeat,
   FadeIn,
   FadeOut,
   SlideInRight,
@@ -57,12 +59,8 @@ export default function LessonScreen() {
     difficultyDelta, lastDifficultyEvent,
     startLesson, nextStep, recordCorrect, recordMistake, addXP,
     completeLesson, openAIHelp, closeAIHelp, resetLesson,
-    clearDifficultyEvent, getCurrentStep, getProgress,
+    clearDifficultyEvent, getCurrentStep,
   } = useLessonStore();
-
-  // ── Animated progress bar ────────────────────────────────────────────────
-  const progressWidth = useSharedValue(0);
-  const progressStyle = useAnimatedStyle(() => ({ width: `${progressWidth.value}%` }));
 
   // ── XP counter bounce ────────────────────────────────────────────────────
   const xpScale = useSharedValue(1);
@@ -89,10 +87,6 @@ export default function LessonScreen() {
     }
     return () => resetLesson();
   }, [id]);
-
-  useEffect(() => {
-    progressWidth.value = withTiming(getProgress(), { duration: 500, easing: Easing.out(Easing.cubic) });
-  }, [currentStepIndex]);
 
   // Bounce XP display when XP changes
   useEffect(() => {
@@ -176,68 +170,57 @@ export default function LessonScreen() {
   const totalSteps = activeLesson.steps?.length ?? 0;
   const questionSteps = activeLesson.steps?.filter((s) => s.type !== "explanation").length ?? 0;
   const isExplain = currentStep.type === "explanation";
-  const stepDots = activeLesson.steps?.map((s, i) => ({ type: s.type, isCurrent: i === currentStepIndex, isDone: i < currentStepIndex })) ?? [];
+  const isLastStep = currentStepIndex === totalSteps - 1;
 
   return (
     <SafeAreaView style={styles.safe}>
 
-      {/* ── Header bar ──────────────────────────────────────────────────────── */}
-      <View style={styles.headerBar}>
-        {/* Quit button */}
-        <TouchableOpacity onPress={handleQuit} style={styles.quitBtn} hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
-          <Feather name="x" size={20} color="#6B7280" />
-        </TouchableOpacity>
+      {/* ── Header ──────────────────────────────────────────────────────────── */}
+      <View style={styles.header}>
+        <View style={styles.headerBar}>
+          {/* Quit button */}
+          <TouchableOpacity
+            onPress={handleQuit}
+            style={styles.quitBtn}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            accessibilityLabel="Exit lesson"
+          >
+            <Feather name="x" size={16} color="#94A3B8" />
+          </TouchableOpacity>
 
-        {/* Segmented progress dots */}
-        <View style={styles.dotsRow}>
-          {stepDots.map((dot, i) => (
-            <Animated.View
-              key={i}
-              style={[
-                styles.dot,
-                dot.isDone && styles.dotDone,
-                dot.isCurrent && styles.dotActive,
-              ]}
-            />
-          ))}
+          {/* Segmented progress — one segment per step */}
+          <View
+            style={styles.segments}
+            accessibilityRole="progressbar"
+            accessibilityValue={{ min: 1, max: totalSteps, now: Math.min(currentStepIndex + 1, totalSteps) }}
+          >
+            {activeLesson.steps.map((_, i) => (
+              <Segment key={i} filled={isComplete || i <= currentStepIndex} current={!isComplete && i === currentStepIndex} />
+            ))}
+          </View>
+
+          {/* XP earned so far */}
+          <Animated.View style={[styles.xpPill, xpStyle]}>
+            <Text style={styles.xpEmoji}>⚡</Text>
+            <Text style={styles.xpCount}>+{Math.max(0, xpEarned)} XP</Text>
+          </Animated.View>
         </View>
 
-        {/* XP pill */}
-        <Animated.View style={[styles.xpPill, xpStyle]}>
-          <Text style={styles.xpEmoji}>⚡</Text>
-          <Text style={styles.xpCount}>{Math.max(0, xpEarned)}</Text>
-        </Animated.View>
-      </View>
-
-      {/* ── Smooth progress bar ──────────────────────────────────────────────── */}
-      <View style={styles.progressTrack}>
-        <Animated.View style={[styles.progressFill, progressStyle]}>
-          <LinearGradient
-            colors={["#818CF8", COLORS.primary]}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={StyleSheet.absoluteFill}
-          />
-          <View style={styles.progressGlow} />
-        </Animated.View>
-      </View>
-
-      {/* ── Step meta ────────────────────────────────────────────────────────── */}
-      {!isComplete && (
-        <View style={styles.stepMeta}>
-          <View style={styles.stepTypePill}>
-            <Text style={styles.stepTypeText}>
-              {isExplain ? "📖 Learn" : currentStep.type === "multiple_choice" ? "🎯 Question" : "✏️ Fill in"}
-            </Text>
+        {/* Step type + counter */}
+        {!isComplete && (
+          <View style={styles.stepMeta}>
+            <View style={styles.stepTypePill}>
+              <Text style={styles.stepTypeText}>
+                {isExplain ? "📖  Learn" : currentStep.type === "multiple_choice" ? "🎯  Question" : "✏️  Fill in"}
+              </Text>
+            </View>
+            <View style={styles.metaRight}>
+              {!isExplain && <DifficultyPill delta={difficultyDelta} />}
+              <Text style={styles.stepCounter}>{currentStepIndex + 1} / {totalSteps}</Text>
+            </View>
           </View>
-          <View style={styles.metaRight}>
-            {!isExplain && (
-              <DifficultyPill delta={difficultyDelta} />
-            )}
-            <Text style={styles.stepCounter}>{currentStepIndex + 1} / {totalSteps}</Text>
-          </View>
-        </View>
-      )}
+        )}
+      </View>
 
       {/* ── Content ──────────────────────────────────────────────────────────── */}
       <ScrollView
@@ -263,19 +246,11 @@ export default function LessonScreen() {
             exiting={SlideOutLeft.duration(200)}
             style={styles.stepContainer}
           >
-            <ExplanationCard content={currentStep.content as ExplanationContent} />
-            <TouchableOpacity onPress={() => nextStep()} style={styles.gotItBtn} activeOpacity={0.9}>
-              <LinearGradient
-                colors={[COLORS.primary, "#8B5CF6"]}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.gotItGradient}
-              >
-                <Text style={styles.gotItText}>
-                  {currentStepIndex === totalSteps - 1 ? "Finish ✓" : "Got it →"}
-                </Text>
-              </LinearGradient>
-            </TouchableOpacity>
+            <ExplanationCard
+              content={currentStep.content as ExplanationContent}
+              topicTitle={topicTitle}
+              lessonNumber={activeLesson.order_index}
+            />
           </Animated.View>
         ) : (
           <QuizQuestion
@@ -293,6 +268,29 @@ export default function LessonScreen() {
         )}
       </ScrollView>
 
+      {/* ── Sticky action bar (explanation steps) ────────────────────────────── */}
+      {isExplain && !isComplete && (
+        <View style={styles.footer}>
+          <Pressable
+            onPress={handleNext}
+            style={({ pressed }) => [styles.gotItBase, pressed && styles.gotItBasePressed]}
+            accessibilityRole="button"
+          >
+            {({ pressed }) => (
+              <LinearGradient
+                colors={["#7C5CF7", "#4F46E5"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={[styles.gotItFace, pressed && styles.gotItFacePressed]}
+              >
+                <Text style={styles.gotItText}>{isLastStep ? "Finish" : "Got it"}</Text>
+                <Text style={styles.gotItArrow}>{isLastStep ? "✓" : "→"}</Text>
+              </LinearGradient>
+            )}
+          </Pressable>
+        </View>
+      )}
+
       <AIHelpModal visible={showAIHelp} question={aiHelpContext} onClose={closeAIHelp} />
 
       {/* ── Difficulty shift toast ───────────────────────────────────────────── */}
@@ -300,6 +298,35 @@ export default function LessonScreen() {
     </SafeAreaView>
   );
 }
+
+// ── Segment (header progress) ─────────────────────────────────────────────────
+
+const Segment: React.FC<{ filled: boolean; current: boolean }> = ({ filled, current }) => {
+  const glow = useSharedValue(0);
+
+  useEffect(() => {
+    if (current) {
+      glow.value = withRepeat(withTiming(1, { duration: 900, easing: Easing.inOut(Easing.ease) }), -1, true);
+    } else {
+      glow.value = 0;
+    }
+  }, [current]);
+
+  const glowStyle = useAnimatedStyle(() => ({ opacity: glow.value * 0.25 }));
+
+  if (!filled) return <View style={[styles.segment, styles.segmentEmpty]} />;
+  return (
+    <View style={[styles.segment, current && styles.segmentCurrent]}>
+      <LinearGradient
+        colors={["#7C5CF7", "#6366F1"]}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+        style={StyleSheet.absoluteFill}
+      />
+      {current && <Animated.View style={[StyleSheet.absoluteFill, styles.segmentGlow, glowStyle]} />}
+    </View>
+  );
+};
 
 // ── DifficultyPill ────────────────────────────────────────────────────────────
 
@@ -335,131 +362,126 @@ const diffPillStyles = StyleSheet.create({
 // ─────────────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#F4F5FF" },
+  safe: { flex: 1, backgroundColor: "#F7F6FE" },
 
   loadingScreen: { flex: 1, alignItems: "center", justifyContent: "center", gap: 12 },
   loadingEmoji: { fontSize: 48 },
   loadingText: { fontSize: 16, color: "#6B7280", fontWeight: "600" },
 
-  // Header bar
+  // Header
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: Platform.OS === "android" ? 10 : 6,
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(237,233,254,0.8)",
+    backgroundColor: "#F7F6FE",
+  },
   headerBar: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingTop: Platform.OS === "android" ? 8 : 4,
-    paddingBottom: 12,
     gap: 12,
   },
   quitBtn: {
     width: 36,
     height: 36,
-    borderRadius: 12,
+    borderRadius: 18,
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 1.5,
-    borderColor: "#E2E8F0",
+    borderWidth: 1,
+    borderColor: "#EDE9FE",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
-    shadowRadius: 4,
-    elevation: 2,
+    shadowRadius: 3,
+    elevation: 1,
   },
 
-  // Segmented dots
-  dotsRow: { flex: 1, flexDirection: "row", gap: 4, alignItems: "center" },
-  dot: {
-    flex: 1,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#E2E8F0",
+  // Segmented progress
+  segments: { flex: 1, flexDirection: "row", gap: 6, alignItems: "center", paddingHorizontal: 2 },
+  segment: { flex: 1, height: 10, borderRadius: 5, overflow: "hidden" },
+  segmentEmpty: { backgroundColor: "#EDE9FE" },
+  segmentCurrent: {
+    shadowColor: "#6C5CE7",
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.35,
+    shadowRadius: 6,
+    elevation: 2,
   },
-  dotDone: { backgroundColor: COLORS.primary },
-  dotActive: {
-    backgroundColor: COLORS.primary,
-    opacity: 0.5,
-  },
+  segmentGlow: { backgroundColor: "#FFFFFF" },
 
   // XP pill
   xpPill: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 4,
-    backgroundColor: "#FEFCE8",
-    borderWidth: 1.5,
+    gap: 5,
+    backgroundColor: "#FFFBEB",
+    borderWidth: 1,
     borderColor: "#FDE68A",
-    paddingHorizontal: 11,
-    paddingVertical: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: 99,
-    shadowColor: "#D97706",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.12,
-    shadowRadius: 5,
-    elevation: 2,
   },
   xpEmoji: { fontSize: 13 },
-  xpCount: { color: "#92400E", fontWeight: "900", fontSize: 14 },
-
-  // Progress bar
-  progressTrack: {
-    marginHorizontal: 16,
-    height: 8,
-    backgroundColor: "#E2E8F0",
-    borderRadius: 99,
-    overflow: "hidden",
-  },
-  progressFill: {
-    height: "100%",
-    borderRadius: 99,
-    overflow: "hidden",
-    minWidth: 8,
-  },
-  progressGlow: {
-    position: "absolute",
-    top: 0,
-    right: 0,
-    bottom: 0,
-    width: 12,
-    backgroundColor: "rgba(255,255,255,0.5)",
-    borderRadius: 99,
-  },
+  xpCount: { color: "#B45309", fontWeight: "700", fontSize: 12 },
 
   // Step meta
   stepMeta: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 4,
+    paddingTop: 10,
+    paddingHorizontal: 2,
   },
   stepTypePill: {
     backgroundColor: "#FFFFFF",
-    paddingHorizontal: 12,
-    paddingVertical: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
     borderRadius: 99,
     borderWidth: 1,
-    borderColor: "#E2E8F0",
+    borderColor: "#DDD6FE",
   },
-  stepTypeText: { fontSize: 12, fontWeight: "700", color: "#374151" },
+  stepTypeText: { fontSize: 12, fontWeight: "600", color: "#6C5CE7" },
   metaRight: { flexDirection: "row", alignItems: "center", gap: 8 },
-  stepCounter: { fontSize: 12, fontWeight: "700", color: "#9CA3AF" },
+  stepCounter: {
+    fontFamily: Platform.select({ ios: "Menlo", android: "monospace", default: "monospace" }),
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#94A3B8",
+    letterSpacing: 1,
+  },
 
   // Body
   body: { flex: 1, paddingHorizontal: 16 },
-  bodyContent: { paddingTop: 8, paddingBottom: 32, gap: 16 },
+  bodyContent: { paddingTop: 12, paddingBottom: 24, gap: 16 },
   stepContainer: { gap: 16 },
 
-  // Got it button
-  gotItBtn: {
-    borderRadius: 18,
-    overflow: "hidden",
-    shadowColor: COLORS.primary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 14,
-    elevation: 8,
+  // Sticky footer
+  footer: {
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 14,
+    backgroundColor: "rgba(255,255,255,0.97)",
+    borderTopWidth: 1,
+    borderTopColor: "#EDE9FE",
   },
-  gotItGradient: { paddingVertical: 17, alignItems: "center" },
-  gotItText: { color: "#FFFFFF", fontWeight: "800", fontSize: 17, letterSpacing: 0.3 },
+  // 3D button: a darker base shows below the face; pressing sinks the face.
+  gotItBase: {
+    borderRadius: 16,
+    backgroundColor: "#5843D4",
+    paddingBottom: 4,
+  },
+  gotItBasePressed: { paddingBottom: 1, marginTop: 3 },
+  gotItFace: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 15,
+    borderRadius: 16,
+  },
+  gotItFacePressed: { opacity: 0.95 },
+  gotItText: { color: "#FFFFFF", fontWeight: "800", fontSize: 16, letterSpacing: 0.4 },
+  gotItArrow: { color: "#FFFFFF", fontWeight: "700", fontSize: 18 },
 });
