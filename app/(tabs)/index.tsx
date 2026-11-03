@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect } from "react";
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   RefreshControl,
   Dimensions,
+  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -22,20 +23,25 @@ import Animated, {
   withSequence,
   Easing,
   FadeInDown,
-  FadeInRight,
 } from "react-native-reanimated";
 import { useAuthStore } from "../../src/store/authStore";
 import { useProgressStore } from "../../src/store/progressStore";
 import {
   COLORS,
-  BORDER_RADIUS,
-  SHADOWS,
   LEVEL_NAMES,
   XP_PER_LEVEL,
 } from "../../src/constants/theme";
 import { TOPICS } from "../../src/data/lessons";
+import { getTodayChallenge, isChallengeCompleted } from "../../src/data/dailyChallenges";
 
 const { width } = Dimensions.get("window");
+
+const MONO = Platform.select({ ios: "Menlo", android: "monospace", default: "monospace" });
+
+const INK = "#0F172A";
+const MUTED = "#64748B";
+const FAINT = "#94A3B8";
+const LINE = "#E2E8F0";
 
 export default function HomeScreen() {
   const { user } = useAuthStore();
@@ -46,13 +52,15 @@ export default function HomeScreen() {
     lessonsCompleted,
     loadProgress,
     topics,
-    isLoading,
+    completedLessonIds,
+    dailyChallengeCompletedDate,
   } = useProgressStore();
 
   const [refreshing, setRefreshing] = React.useState(false);
 
-  // XP bar animation
-  const xpPct = ((totalXP % XP_PER_LEVEL) / XP_PER_LEVEL) * 100;
+  const xpInLevel = totalXP % XP_PER_LEVEL;
+  const xpToNext = XP_PER_LEVEL - xpInLevel;
+  const xpPct = (xpInLevel / XP_PER_LEVEL) * 100;
   const xpBarWidth = useSharedValue(0);
   const xpBarStyle = useAnimatedStyle(() => ({ width: `${xpBarWidth.value}%` }));
 
@@ -84,8 +92,14 @@ export default function HomeScreen() {
   const nextLesson = topics.flatMap((t) => t.lessons).find((l) => !l.is_completed && !l.is_locked);
   const nextTopic = nextLesson ? topics.find((t) => t.lessons.some((l) => l.id === nextLesson.id)) : null;
 
+  const challenge = getTodayChallenge();
+  const challengeDone = isChallengeCompleted(dailyChallengeCompletedDate);
+
+  const name = user?.username ?? "Learner";
+  const streakLabel = `${currentStreak} ${currentStreak === 1 ? "DAY" : "DAYS"}`;
+
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={["top"]}>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
@@ -93,76 +107,98 @@ export default function HomeScreen() {
       >
         {/* ── Header ─────────────────────────────────────────────────────── */}
         <Animated.View entering={FadeInDown.delay(0).springify()} style={styles.header}>
-          <View>
-            <Text style={styles.greeting}>{getGreeting()}</Text>
-            <Text style={styles.username}>{user?.username ?? "Learner"} 👋</Text>
+          <View style={styles.headerLeft}>
+            <LinearGradient
+              colors={["#7C3AED", "#6366F1"]}
+              start={{ x: 0, y: 1 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.avatar}
+            >
+              <Text style={styles.avatarText}>{name.charAt(0).toUpperCase()}</Text>
+            </LinearGradient>
+            <View style={styles.headerText}>
+              <Text style={styles.greeting}>{getGreeting()}</Text>
+              <Text style={styles.username} numberOfLines={1}>{name} 👋</Text>
+            </View>
           </View>
-          {/* Streak badge */}
-          <Animated.View style={flameStyle}>
-            <TouchableOpacity style={[
-              styles.streakBadge,
-              currentStreak === 0 && styles.streakBadgeInactive,
-            ]} activeOpacity={0.8}>
+
+          <Animated.View style={currentStreak > 0 ? flameStyle : undefined}>
+            <View style={[styles.streakPill, currentStreak === 0 && styles.streakPillInactive]}>
               <Text style={styles.streakFlame}>{currentStreak > 0 ? "🔥" : "💤"}</Text>
-              <Text style={[styles.streakCount, currentStreak === 0 && styles.streakCountInactive]}>
-                {currentStreak}
+              <Text style={[styles.streakText, currentStreak === 0 && styles.streakTextInactive]}>
+                {streakLabel}
               </Text>
-            </TouchableOpacity>
+            </View>
           </Animated.View>
         </Animated.View>
 
         {/* ── Level / XP card ────────────────────────────────────────────── */}
-        <Animated.View entering={FadeInDown.delay(80).springify()}>
+        <Animated.View entering={FadeInDown.delay(80).springify()} style={styles.levelShadow}>
           <LinearGradient
-            colors={["#5B4FE8", "#7C6FF7", "#9B8FF5"]}
+            colors={["#6366F1", "#7C3AED", "#9333EA"]}
+            locations={[0, 0.55, 1]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.levelCard}
           >
-            {/* Decorative orb */}
             <View style={styles.levelOrb} />
             <View style={styles.levelOrb2} />
 
             <View style={styles.levelHeader}>
               <View style={styles.levelLeft}>
-                <Text style={styles.levelEyebrow}>LEVEL {currentLevel}</Text>
-                <Text style={styles.levelName}>{LEVEL_NAMES[currentLevel] ?? "Mathlete"}</Text>
+                <View style={styles.levelEyebrowPill}>
+                  <Text style={styles.levelEyebrow}>LEVEL PROGRESS</Text>
+                </View>
+                <Text style={styles.levelTitle}>
+                  Level {currentLevel}
+                  <Text style={styles.levelName}>  ·  {LEVEL_NAMES[currentLevel] ?? "Mathlete"}</Text>
+                </Text>
               </View>
               <View style={styles.levelBadge}>
                 <Text style={styles.levelNum}>{currentLevel}</Text>
               </View>
             </View>
 
-            <View style={styles.xpTrack}>
-              <Animated.View style={[styles.xpFill, xpBarStyle]}>
-                {/* Shimmer highlight */}
-                <View style={styles.xpShimmer} />
-              </Animated.View>
-            </View>
-
-            <View style={styles.levelFooter}>
-              <Text style={styles.xpLabel}>
-                {totalXP % XP_PER_LEVEL} / {XP_PER_LEVEL} XP
+            <View style={styles.xpMetaRow}>
+              <Text style={styles.xpValue}>
+                {xpInLevel}
+                <Text style={styles.xpOf}> / {XP_PER_LEVEL} XP</Text>
               </Text>
-              <Text style={styles.xpNext}>→ Level {currentLevel + 1}</Text>
+              <View style={styles.xpNextRow}>
+                <Text style={styles.xpNext}>{xpToNext} XP to Level {currentLevel + 1}</Text>
+                <Feather name="chevron-right" size={12} color="#C7D2FE" />
+              </View>
+            </View>
+            <View style={styles.xpTrack}>
+              <Animated.View style={[styles.xpFill, xpBarStyle]} />
             </View>
           </LinearGradient>
         </Animated.View>
 
         {/* ── Stats row ──────────────────────────────────────────────────── */}
         <Animated.View entering={FadeInDown.delay(140).springify()} style={styles.statsRow}>
-          <StatCard icon="⚡" label="Total XP" value={totalXP.toLocaleString()} color="#6C63FF" bg="#EEF2FF" border="#C7D2FE" />
-          <StatCard icon="🔥" label="Streak" value={`${currentStreak}d`} color="#EA580C" bg="#FFF7ED" border="#FED7AA" />
-          <StatCard icon="✅" label="Lessons" value={lessonsCompleted.toString()} color="#16A34A" bg="#F0FDF4" border="#BBF7D0" />
+          <StatCard icon="⚡" iconBg="#FEF3C7" value={totalXP.toLocaleString()} label="Total XP" mono />
+          <StatCard
+            icon="🔥"
+            iconBg="#FFEDD5"
+            value={`${currentStreak} ${currentStreak === 1 ? "Day" : "Days"}`}
+            label="Current"
+          />
+          <StatCard icon="✓" iconBg="#D1FAE5" iconColor="#059669" value={lessonsCompleted.toString()} label="Lessons" mono />
         </Animated.View>
 
         {/* ── Continue learning ──────────────────────────────────────────── */}
         {nextLesson && nextTopic && (
-          <Animated.View entering={FadeInDown.delay(200).springify()}>
-            <SectionLabel title="Continue Learning" />
+          <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.sectionGap}>
+            <View style={styles.sectionRow}>
+              <Text style={styles.sectionCaps}>CONTINUE LEARNING</Text>
+              <Text style={styles.sectionLink}>Resume</Text>
+            </View>
             <ContinueCard
-              lesson={nextLesson}
-              topic={nextTopic}
+              lessonTitle={nextLesson.title}
+              topicTitle={nextTopic.title}
+              xp={nextLesson.xp_reward}
+              steps={nextLesson.steps.length}
               onPress={() => router.push({ pathname: "/lesson/[id]", params: { id: nextLesson.id, topicTitle: nextTopic.title } })}
             />
           </Animated.View>
@@ -170,24 +206,37 @@ export default function HomeScreen() {
 
         {/* ── Daily challenge ────────────────────────────────────────────── */}
         <Animated.View entering={FadeInDown.delay(260).springify()}>
-          <SectionLabel title="Daily Challenge" />
-          <DailyChallengeCard onPress={() => router.push("/(tabs)/learn")} />
+          <DailyChallengeCard
+            subtitle={challengeDone ? "Done for today — come back tomorrow!" : challenge.title}
+            xp={challenge.xpReward}
+            done={challengeDone}
+            onPress={() => router.push("/daily-challenge")}
+          />
         </Animated.View>
 
         {/* ── Topics grid ────────────────────────────────────────────────── */}
-        <Animated.View entering={FadeInDown.delay(320).springify()}>
-          <SectionLabel title="Topics" onMore={() => router.push("/(tabs)/learn")} />
+        <Animated.View entering={FadeInDown.delay(320).springify()} style={styles.topicsSection}>
+          <View style={styles.sectionRow}>
+            <View>
+              <Text style={styles.sectionTitle}>Explore Topics</Text>
+              <Text style={styles.sectionSub}>Your maths learning path</Text>
+            </View>
+            <TouchableOpacity onPress={() => router.push("/(tabs)/learn")} style={styles.seeAllBtn}>
+              <Text style={styles.sectionLink}>See all</Text>
+              <Feather name="chevron-right" size={14} color={COLORS.primary} />
+            </TouchableOpacity>
+          </View>
           <View style={styles.topicsGrid}>
             {TOPICS.map((topic, i) => {
-              const completedCount = topic.lessons.filter((l) =>
-                useProgressStore.getState().completedLessonIds.has(l.id)
-              ).length;
+              const completedCount = topic.lessons.filter((l) => completedLessonIds.has(l.id)).length;
               const total = topic.lessons.length;
               const pct = Math.round((completedCount / total) * 100);
               return (
                 <TopicCard
                   key={topic.id}
-                  topic={topic}
+                  title={topic.title}
+                  emoji={getCategoryEmoji(topic.category)}
+                  color={topic.color}
                   completed={completedCount}
                   total={total}
                   pct={pct}
@@ -207,68 +256,88 @@ export default function HomeScreen() {
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
-const SectionLabel: React.FC<{ title: string; onMore?: () => void }> = ({ title, onMore }) => (
-  <View style={styles.sectionRow}>
-    <Text style={styles.sectionTitle}>{title}</Text>
-    {onMore && (
-      <TouchableOpacity onPress={onMore} style={styles.seeAllBtn}>
-        <Text style={styles.seeAll}>See all</Text>
-        <Feather name="chevron-right" size={14} color={COLORS.primary} />
-      </TouchableOpacity>
-    )}
+const StatCard: React.FC<{
+  icon: string;
+  iconBg: string;
+  iconColor?: string;
+  value: string;
+  label: string;
+  mono?: boolean;
+}> = ({ icon, iconBg, iconColor, value, label, mono }) => (
+  <View style={styles.statCard}>
+    <View style={[styles.statIconWrap, { backgroundColor: iconBg }]}>
+      <Text style={[styles.statIcon, iconColor ? { color: iconColor, fontWeight: "800" } : null]}>{icon}</Text>
+    </View>
+    <Text style={[styles.statValue, mono && { fontFamily: MONO }]} numberOfLines={1}>{value}</Text>
+    <Text style={styles.statLabel}>{label}</Text>
   </View>
 );
 
-const StatCard: React.FC<{
-  icon: string; label: string; value: string; color: string; bg: string; border: string;
-}> = ({ icon, label, value, color, bg, border }) => {
+/** Shrinks slightly while pressed. */
+function usePressScale(to = 0.975) {
   const scale = useSharedValue(1);
-  const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
-  return (
-    <Animated.View style={[styles.statCard, { backgroundColor: bg, borderColor: border }, animStyle]}>
-      <Text style={styles.statIcon}>{icon}</Text>
-      <Text style={[styles.statValue, { color }]}>{value}</Text>
-      <Text style={styles.statLabel}>{label}</Text>
-    </Animated.View>
-  );
-};
+  const style = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  return {
+    style,
+    onPressIn: () => { scale.value = withSpring(to, { stiffness: 400, damping: 20 }); },
+    onPressOut: () => { scale.value = withSpring(1, { stiffness: 400, damping: 20 }); },
+  };
+}
 
-const ContinueCard: React.FC<{ lesson: any; topic: any; onPress: () => void }> = ({ lesson, topic, onPress }) => {
-  const scale = useSharedValue(1);
-  const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+const ContinueCard: React.FC<{
+  lessonTitle: string;
+  topicTitle: string;
+  xp: number;
+  steps: number;
+  onPress: () => void;
+}> = ({ lessonTitle, topicTitle, xp, steps, onPress }) => {
+  const press = usePressScale();
+  const blink = useSharedValue(1);
+
+  useEffect(() => {
+    blink.value = withRepeat(withTiming(0.25, { duration: 900 }), -1, true);
+  }, []);
+
+  const dotStyle = useAnimatedStyle(() => ({ opacity: blink.value }));
+
   return (
-    <Animated.View style={animStyle}>
+    <Animated.View style={[styles.continueShadow, press.style]}>
       <TouchableOpacity
         onPress={onPress}
-        onPressIn={() => { scale.value = withSpring(0.97, { stiffness: 400, damping: 20 }); }}
-        onPressOut={() => { scale.value = withSpring(1, { stiffness: 400, damping: 20 }); }}
+        onPressIn={press.onPressIn}
+        onPressOut={press.onPressOut}
         activeOpacity={1}
-        style={styles.continueCard}
+        accessibilityRole="button"
+        accessibilityLabel={`Resume ${lessonTitle} lesson`}
       >
         <LinearGradient
-          colors={[topic.color, shadeColor(topic.color, -20)]}
+          colors={["#F97316", "#EA580C", "#C2410C"]}
+          locations={[0, 0.6, 1]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.continueGradient}
+          style={styles.continueCard}
         >
-          {/* Background decoration */}
-          <View style={[styles.continueOrb, { backgroundColor: "rgba(255,255,255,0.08)" }]} />
-
+          <LinearGradient
+            colors={["rgba(255,255,255,0)", "rgba(255,255,255,0.1)"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.continueSheen}
+            pointerEvents="none"
+          />
           <View style={styles.continueLeft}>
             <View style={styles.upNextPill}>
-              <Text style={styles.upNextText}>▶ UP NEXT</Text>
+              <Animated.View style={[styles.upNextDot, dotStyle]} />
+              <Text style={styles.upNextText} numberOfLines={1}>
+                UP NEXT • {topicTitle.toUpperCase()}
+              </Text>
             </View>
-            <Text style={styles.continueTitle} numberOfLines={2}>{lesson.title}</Text>
-            <Text style={styles.continueTopic}>{topic.title}</Text>
+            <Text style={styles.continueTitle} numberOfLines={2}>{lessonTitle}</Text>
+            <Text style={styles.continueMeta}>
+              ⚡ +{xp} XP{"   "}•{"   "}{steps} steps
+            </Text>
           </View>
-
-          <View style={styles.continueRight}>
-            <View style={styles.playBtn}>
-              <Feather name="play" size={22} color={topic.color} />
-            </View>
-            <View style={styles.xpPill}>
-              <Text style={styles.xpPillText}>+{lesson.xp_reward} XP</Text>
-            </View>
+          <View style={styles.playBtn}>
+            <Feather name="play" size={22} color="#EA580C" style={{ marginLeft: 3 }} />
           </View>
         </LinearGradient>
       </TouchableOpacity>
@@ -276,34 +345,41 @@ const ContinueCard: React.FC<{ lesson: any; topic: any; onPress: () => void }> =
   );
 };
 
-const DailyChallengeCard: React.FC<{ onPress: () => void }> = ({ onPress }) => {
-  const scale = useSharedValue(1);
-  const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+const DailyChallengeCard: React.FC<{
+  subtitle: string;
+  xp: number;
+  done: boolean;
+  onPress: () => void;
+}> = ({ subtitle, xp, done, onPress }) => {
+  const press = usePressScale();
   return (
-    <Animated.View style={animStyle}>
+    <Animated.View style={[styles.challengeShadow, press.style]}>
       <TouchableOpacity
         onPress={onPress}
-        onPressIn={() => { scale.value = withSpring(0.97, { stiffness: 400, damping: 20 }); }}
-        onPressOut={() => { scale.value = withSpring(1, { stiffness: 400, damping: 20 }); }}
+        onPressIn={press.onPressIn}
+        onPressOut={press.onPressOut}
         activeOpacity={1}
-        style={styles.challengeCard}
       >
         <LinearGradient
-          colors={["#D97706", "#F59E0B", "#FCD34D"]}
+          colors={["#F59E0B", "#D97706"]}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={styles.challengeGradient}
+          style={styles.challengeCard}
         >
-          <View style={styles.challengeOrb} />
           <View style={styles.challengeIconWrap}>
-            <Text style={styles.challengeEmoji}>⚡</Text>
+            <Text style={styles.challengeEmoji}>{done ? "✅" : "⚡"}</Text>
           </View>
           <View style={styles.challengeContent}>
-            <Text style={styles.challengeTitle}>Daily Challenge</Text>
-            <Text style={styles.challengeSub}>Complete a lesson to keep your streak!</Text>
+            <View style={styles.challengeTitleRow}>
+              <Text style={styles.challengeTitle}>Daily Challenge</Text>
+              <View style={styles.todayChip}>
+                <Text style={styles.todayChipText}>{done ? "DONE" : "TODAY"}</Text>
+              </View>
+            </View>
+            <Text style={styles.challengeSub} numberOfLines={1}>{subtitle}</Text>
           </View>
           <View style={styles.bonusPill}>
-            <Text style={styles.bonusLine1}>+50</Text>
+            <Text style={styles.bonusLine1}>+{xp}</Text>
             <Text style={styles.bonusLine2}>XP</Text>
           </View>
         </LinearGradient>
@@ -313,35 +389,63 @@ const DailyChallengeCard: React.FC<{ onPress: () => void }> = ({ onPress }) => {
 };
 
 const TopicCard: React.FC<{
-  topic: any; completed: number; total: number; pct: number; index: number; onPress: () => void;
-}> = ({ topic, completed, total, pct, index, onPress }) => {
-  const scale = useSharedValue(1);
+  title: string;
+  emoji: string;
+  color: string;
+  completed: number;
+  total: number;
+  pct: number;
+  index: number;
+  onPress: () => void;
+}> = ({ title, emoji, color, completed, total, pct, index, onPress }) => {
+  const press = usePressScale(0.96);
   const barWidth = useSharedValue(0);
-  const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
   const barStyle = useAnimatedStyle(() => ({ width: `${barWidth.value}%` }));
 
   useEffect(() => {
     barWidth.value = withDelay(400 + index * 80, withTiming(pct, { duration: 700, easing: Easing.out(Easing.cubic) }));
   }, [pct]);
 
+  const mastered = pct === 100;
+  const started = completed > 0;
+  const barColor = mastered ? "#10B981" : started ? color : "#CBD5E1";
+  const pctColor = mastered ? "#059669" : started ? color : FAINT;
+
   return (
-    <Animated.View style={[styles.topicCard, animStyle]}>
+    <Animated.View style={[styles.topicCard, started && !mastered && { borderColor: color + "40" }, press.style]}>
       <TouchableOpacity
         onPress={onPress}
-        onPressIn={() => { scale.value = withSpring(0.96, { stiffness: 400, damping: 20 }); }}
-        onPressOut={() => { scale.value = withSpring(1, { stiffness: 400, damping: 20 }); }}
+        onPressIn={press.onPressIn}
+        onPressOut={press.onPressOut}
         activeOpacity={1}
         style={styles.topicCardInner}
       >
-        <View style={[styles.topicIconWrap, { backgroundColor: topic.color + "18" }]}>
-          <Text style={styles.topicEmoji}>{getCategoryEmoji(topic.category)}</Text>
+        <View style={styles.topicTopRow}>
+          <View style={[styles.topicIconWrap, { backgroundColor: color + "14", borderColor: color + "26" }]}>
+            <Text style={styles.topicEmoji}>{emoji}</Text>
+          </View>
+          {mastered ? (
+            <View style={[styles.statusPill, styles.statusMastered]}>
+              <Text style={[styles.statusText, { color: "#047857" }]}>✓ Mastered</Text>
+            </View>
+          ) : started ? (
+            <View style={[styles.statusPill, { backgroundColor: color + "14", borderColor: color + "33" }]}>
+              <Text style={[styles.statusText, { color }]}>In Progress</Text>
+            </View>
+          ) : (
+            <View style={[styles.statusPill, styles.statusNew]}>
+              <Text style={[styles.statusText, { color: FAINT }]}>New</Text>
+            </View>
+          )}
         </View>
-        <Text style={styles.topicTitle} numberOfLines={1}>{topic.title}</Text>
+
+        <Text style={styles.topicTitle} numberOfLines={1}>{title}</Text>
         <Text style={styles.topicSub}>{completed}/{total} done</Text>
+
         <View style={styles.topicTrack}>
-          <Animated.View style={[styles.topicFill, { backgroundColor: topic.color }, barStyle]} />
+          <Animated.View style={[styles.topicFill, { backgroundColor: barColor }, barStyle]} />
         </View>
-        <Text style={[styles.topicPct, { color: topic.color }]}>{pct}%</Text>
+        <Text style={[styles.topicPct, { color: pctColor }]}>{pct}%</Text>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -351,9 +455,9 @@ const TopicCard: React.FC<{
 
 function getGreeting() {
   const h = new Date().getHours();
-  if (h < 12) return "Good morning,";
-  if (h < 17) return "Good afternoon,";
-  return "Good evening,";
+  if (h < 12) return "GOOD MORNING";
+  if (h < 17) return "GOOD AFTERNOON";
+  return "GOOD EVENING";
 }
 
 function getCategoryEmoji(category: string) {
@@ -372,239 +476,321 @@ function getCategoryEmoji(category: string) {
   return map[category] ?? "📚";
 }
 
-/** Darken a hex color by `amount` percent */
-function shadeColor(hex: string, amount: number): string {
-  const num = parseInt(hex.replace("#", ""), 16);
-  const r = Math.min(255, Math.max(0, (num >> 16) + amount));
-  const g = Math.min(255, Math.max(0, ((num >> 8) & 0xff) + amount));
-  const b = Math.min(255, Math.max(0, (num & 0xff) + amount));
-  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
-}
-
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#F4F5FF" },
-  content: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 20, gap: 18 },
+  safe: { flex: 1, backgroundColor: "#FFFFFF" },
+  content: { paddingHorizontal: 20, paddingTop: 12, paddingBottom: 20, gap: 20 },
 
   // Header
-  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  greeting: { fontSize: 13, color: "#6B7280", fontWeight: "500", letterSpacing: 0.2 },
-  username: { fontSize: 24, fontWeight: "900", color: "#111827", letterSpacing: -0.5 },
-  streakBadge: {
+  header: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 12 },
+  headerLeft: { flexDirection: "row", alignItems: "center", gap: 12, flex: 1 },
+  avatar: {
+    width: 44,
+    height: 44,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "#EDE9FE",
+  },
+  avatarText: { color: "#FFFFFF", fontWeight: "800", fontSize: 17 },
+  headerText: { flex: 1 },
+  greeting: { fontSize: 11, color: FAINT, fontWeight: "600", letterSpacing: 1 },
+  username: { fontSize: 20, fontWeight: "800", color: INK, letterSpacing: -0.4 },
+  streakPill: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
-    backgroundColor: "#FFF7ED",
-    borderWidth: 1.5,
-    borderColor: "#FED7AA",
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: BORDER_RADIUS.full,
-    shadowColor: "#F97316",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 3,
+    gap: 6,
+    backgroundColor: "#FFFBEB",
+    borderWidth: 1,
+    borderColor: "#FDE68A",
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 99,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
-  streakBadgeInactive: { backgroundColor: "#F8FAFC", borderColor: "#E2E8F0" },
-  streakFlame: { fontSize: 18 },
-  streakCount: { fontSize: 18, fontWeight: "900", color: "#EA580C" },
-  streakCountInactive: { color: "#94A3B8" },
+  streakPillInactive: { backgroundColor: "#F8FAFC", borderColor: LINE },
+  streakFlame: { fontSize: 15 },
+  streakText: { fontSize: 12, fontWeight: "800", color: "#78350F", letterSpacing: -0.2 },
+  streakTextInactive: { color: FAINT },
 
   // Level card
-  levelCard: {
+  levelShadow: {
     borderRadius: 24,
-    padding: 20,
-    gap: 12,
-    overflow: "hidden",
-    shadowColor: "#5B4FE8",
+    backgroundColor: "#7C3AED",
+    shadowColor: "#7C3AED",
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 20,
+    shadowOpacity: 0.35,
+    shadowRadius: 18,
     elevation: 10,
   },
+  levelCard: { borderRadius: 24, padding: 20, overflow: "hidden" },
   levelOrb: {
     position: "absolute",
     top: -40,
-    right: -30,
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: "rgba(255,255,255,0.06)",
+    right: -40,
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    backgroundColor: "rgba(255,255,255,0.08)",
   },
   levelOrb2: {
     position: "absolute",
-    bottom: -20,
-    left: -20,
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    backgroundColor: "rgba(255,255,255,0.04)",
+    bottom: -32,
+    left: -32,
+    width: 128,
+    height: 128,
+    borderRadius: 64,
+    backgroundColor: "rgba(49,46,129,0.25)",
   },
-  levelHeader: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  levelLeft: { gap: 2 },
-  levelEyebrow: { fontSize: 11, color: "rgba(255,255,255,0.65)", fontWeight: "700", letterSpacing: 1.2 },
-  levelName: { fontSize: 20, color: "#FFFFFF", fontWeight: "800", letterSpacing: -0.3 },
+  levelHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    marginBottom: 16,
+  },
+  levelLeft: { flex: 1, alignItems: "flex-start" },
+  levelEyebrowPill: {
+    backgroundColor: "rgba(255,255,255,0.15)",
+    paddingHorizontal: 10,
+    paddingVertical: 2,
+    borderRadius: 99,
+    marginBottom: 6,
+  },
+  levelEyebrow: { fontSize: 10, color: "rgba(224,231,255,0.9)", fontWeight: "700", letterSpacing: 1.5 },
+  levelTitle: { fontSize: 24, color: "#FFFFFF", fontWeight: "900", letterSpacing: -0.5 },
+  levelName: { fontSize: 18, color: "#C7D2FE", fontWeight: "500", letterSpacing: 0 },
   levelBadge: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: "rgba(255,255,255,0.18)",
-    borderWidth: 1.5,
+    width: 44,
+    height: 44,
+    borderRadius: 16,
+    backgroundColor: "rgba(255,255,255,0.15)",
+    borderWidth: 1,
     borderColor: "rgba(255,255,255,0.3)",
     alignItems: "center",
     justifyContent: "center",
   },
-  levelNum: { color: "#FFFFFF", fontWeight: "900", fontSize: 22 },
-  xpTrack: { height: 10, backgroundColor: "rgba(255,255,255,0.2)", borderRadius: 99, overflow: "hidden" },
-  xpFill: { height: "100%", backgroundColor: "#FFFFFF", borderRadius: 99, minWidth: 4 },
-  xpShimmer: {
-    position: "absolute",
-    top: 0,
-    right: 0,
-    bottom: 0,
-    width: 20,
-    backgroundColor: "rgba(255,255,255,0.4)",
-    borderRadius: 99,
+  levelNum: { color: "#FFFFFF", fontWeight: "800", fontSize: 18 },
+  xpMetaRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
+    marginBottom: 8,
   },
-  levelFooter: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
-  xpLabel: { fontSize: 12, color: "rgba(255,255,255,0.8)", fontWeight: "600" },
-  xpNext: { fontSize: 12, color: "rgba(255,255,255,0.6)", fontWeight: "500" },
+  xpValue: { fontFamily: MONO, fontSize: 14, color: "rgba(255,255,255,0.92)", fontWeight: "700" },
+  xpOf: { fontFamily: MONO, fontSize: 12, color: "#C7D2FE", fontWeight: "400" },
+  xpNextRow: { flexDirection: "row", alignItems: "center", gap: 2 },
+  xpNext: { fontSize: 11, color: "#C7D2FE", fontWeight: "500" },
+  xpTrack: {
+    height: 10,
+    backgroundColor: "rgba(0,0,0,0.2)",
+    borderRadius: 99,
+    padding: 2,
+    overflow: "hidden",
+  },
+  xpFill: { height: "100%", backgroundColor: "#FFFFFF", borderRadius: 99, minWidth: 4 },
 
   // Stats
   statsRow: { flexDirection: "row", gap: 10 },
   statCard: {
     flex: 1,
     alignItems: "center",
-    padding: 14,
+    justifyContent: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 6,
     borderRadius: 16,
-    gap: 4,
-    borderWidth: 1.5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 6,
-    elevation: 2,
+    backgroundColor: "#F8FAFC",
+    borderWidth: 1,
+    borderColor: LINE,
   },
-  statIcon: { fontSize: 20 },
-  statValue: { fontSize: 20, fontWeight: "900", letterSpacing: -0.5 },
-  statLabel: { fontSize: 10, color: "#9CA3AF", fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 },
+  statIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 6,
+  },
+  statIcon: { fontSize: 14 },
+  statValue: { fontSize: 16, fontWeight: "800", color: "#1E293B", letterSpacing: -0.3 },
+  statLabel: {
+    fontSize: 10,
+    color: FAINT,
+    fontWeight: "600",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+    marginTop: 1,
+  },
 
-  // Section
-  sectionRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  sectionTitle: { fontSize: 18, fontWeight: "800", color: "#111827", letterSpacing: -0.3 },
-  seeAllBtn: { flexDirection: "row", alignItems: "center", gap: 2 },
-  seeAll: { fontSize: 13, color: COLORS.primary, fontWeight: "700" },
+  // Sections
+  sectionGap: { gap: 8 },
+  sectionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 4,
+  },
+  sectionCaps: { fontSize: 13, fontWeight: "700", color: INK, letterSpacing: 0.3 },
+  sectionTitle: { fontSize: 16, fontWeight: "800", color: INK, letterSpacing: -0.3 },
+  sectionSub: { fontSize: 12, color: MUTED, fontWeight: "500", marginTop: 1 },
+  sectionLink: { fontSize: 12, color: COLORS.primary, fontWeight: "700" },
+  seeAllBtn: { flexDirection: "row", alignItems: "center", gap: 2, paddingVertical: 4 },
 
   // Continue card
-  continueCard: {
-    borderRadius: 22,
-    overflow: "hidden",
-    shadowColor: "#6C63FF",
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.25,
+  continueShadow: {
+    borderRadius: 24,
+    backgroundColor: "#EA580C",
+    shadowColor: "#F97316",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
     shadowRadius: 18,
-    elevation: 8,
+    elevation: 9,
   },
-  continueGradient: { flexDirection: "row", alignItems: "center", padding: 20, gap: 14, overflow: "hidden" },
-  continueOrb: { position: "absolute", top: -30, right: -20, width: 120, height: 120, borderRadius: 60 },
-  continueLeft: { flex: 1, gap: 6 },
+  continueCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 16,
+    padding: 20,
+    borderRadius: 24,
+    overflow: "hidden",
+  },
+  continueSheen: { position: "absolute", top: 0, bottom: 0, right: 0, width: "50%" },
+  continueLeft: { flex: 1, gap: 6, alignItems: "flex-start" },
   upNextPill: {
-    alignSelf: "flex-start",
-    backgroundColor: "rgba(255,255,255,0.22)",
-    borderRadius: BORDER_RADIUS.full,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    backgroundColor: "rgba(0,0,0,0.2)",
     paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingVertical: 3,
+    borderRadius: 99,
+    maxWidth: "100%",
   },
-  upNextText: { color: "rgba(255,255,255,0.9)", fontSize: 10, fontWeight: "800", letterSpacing: 0.8 },
+  upNextDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: "#FCD34D" },
+  upNextText: { color: "#FDE68A", fontSize: 10, fontWeight: "800", letterSpacing: 0.8, flexShrink: 1 },
   continueTitle: { fontSize: 18, color: "#FFFFFF", fontWeight: "800", letterSpacing: -0.3, lineHeight: 24 },
-  continueTopic: { fontSize: 13, color: "rgba(255,255,255,0.75)", fontWeight: "500" },
-  continueRight: { alignItems: "center", gap: 8 },
+  continueMeta: { fontSize: 12, color: "#FFEDD5", fontWeight: "500" },
   playBtn: {
     width: 52,
     height: 52,
-    borderRadius: 26,
+    borderRadius: 16,
     backgroundColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.15,
-    shadowRadius: 6,
-    elevation: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.18,
+    shadowRadius: 8,
+    elevation: 5,
   },
-  xpPill: {
-    backgroundColor: "rgba(255,255,255,0.2)",
-    borderRadius: 99,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-  },
-  xpPillText: { color: "#FFFFFF", fontWeight: "800", fontSize: 12 },
 
   // Challenge card
-  challengeCard: {
-    borderRadius: 22,
-    overflow: "hidden",
-    shadowColor: "#D97706",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.25,
-    shadowRadius: 14,
-    elevation: 8,
+  challengeShadow: {
+    borderRadius: 18,
+    backgroundColor: "#D97706",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 3,
   },
-  challengeGradient: { flexDirection: "row", alignItems: "center", padding: 18, gap: 14, overflow: "hidden" },
-  challengeOrb: {
-    position: "absolute",
-    top: -20,
-    right: -10,
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: "rgba(255,255,255,0.1)",
+  challengeCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 16,
+    gap: 12,
+    borderRadius: 18,
+    overflow: "hidden",
   },
   challengeIconWrap: {
-    width: 48,
-    height: 48,
-    borderRadius: 16,
-    backgroundColor: "rgba(255,255,255,0.25)",
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: "rgba(255,255,255,0.2)",
     alignItems: "center",
     justifyContent: "center",
   },
-  challengeEmoji: { fontSize: 26 },
+  challengeEmoji: { fontSize: 18 },
   challengeContent: { flex: 1 },
-  challengeTitle: { color: "#FFFFFF", fontWeight: "800", fontSize: 16, letterSpacing: -0.2 },
-  challengeSub: { color: "rgba(255,255,255,0.85)", fontSize: 12, lineHeight: 17, marginTop: 3, fontWeight: "500" },
+  challengeTitleRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  challengeTitle: { color: "#FFFFFF", fontWeight: "700", fontSize: 14, letterSpacing: -0.2 },
+  todayChip: {
+    backgroundColor: "rgba(255,255,255,0.2)",
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
+  },
+  todayChipText: { color: "#FEF3C7", fontSize: 9, fontWeight: "800", letterSpacing: 0.5 },
+  challengeSub: { color: "#FEF3C7", fontSize: 12, fontWeight: "500", marginTop: 2 },
   bonusPill: {
-    backgroundColor: "rgba(255,255,255,0.22)",
-    borderRadius: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    backgroundColor: "rgba(255,255,255,0.25)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.3)",
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
     alignItems: "center",
   },
-  bonusLine1: { color: "#FFFFFF", fontWeight: "900", fontSize: 18, lineHeight: 20 },
-  bonusLine2: { color: "rgba(255,255,255,0.8)", fontWeight: "700", fontSize: 11 },
+  bonusLine1: { fontFamily: MONO, color: "#FFFFFF", fontWeight: "900", fontSize: 12, lineHeight: 14 },
+  bonusLine2: { color: "#FEF3C7", fontWeight: "700", fontSize: 9, letterSpacing: 0.8 },
 
   // Topics
+  topicsSection: { gap: 12 },
   topicsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 12 },
   topicCard: {
     width: (width - 52) / 2,
     backgroundColor: "#FFFFFF",
-    borderRadius: 20,
-    overflow: "hidden",
-    shadowColor: "#6C63FF",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 4,
+    borderRadius: 18,
     borderWidth: 1,
-    borderColor: "#F0EDFF",
+    borderColor: LINE,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
   },
-  topicCardInner: { padding: 16, gap: 6 },
-  topicIconWrap: { width: 44, height: 44, borderRadius: 14, alignItems: "center", justifyContent: "center" },
-  topicEmoji: { fontSize: 22 },
-  topicTitle: { fontSize: 15, fontWeight: "800", color: "#111827", letterSpacing: -0.2 },
-  topicSub: { fontSize: 11, color: "#9CA3AF", fontWeight: "600" },
-  topicTrack: { height: 5, backgroundColor: "#F1F5F9", borderRadius: 99, overflow: "hidden" },
-  topicFill: { height: "100%", borderRadius: 99, minWidth: 2 },
-  topicPct: { fontSize: 12, fontWeight: "800" },
+  topicCardInner: { padding: 16 },
+  topicTopRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 12,
+    gap: 6,
+  },
+  topicIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  topicEmoji: { fontSize: 18 },
+  statusPill: {
+    flexShrink: 1,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 99,
+    borderWidth: 1,
+  },
+  statusMastered: { backgroundColor: "#ECFDF5", borderColor: "#A7F3D0" },
+  statusNew: { backgroundColor: "#F8FAFC", borderColor: "#F1F5F9" },
+  statusText: { fontSize: 10, fontWeight: "700" },
+  topicTitle: { fontSize: 14, fontWeight: "700", color: INK, letterSpacing: -0.2 },
+  topicSub: { fontSize: 11, color: MUTED, fontWeight: "500", marginTop: 1 },
+  topicTrack: {
+    height: 6,
+    backgroundColor: "#F1F5F9",
+    borderRadius: 99,
+    overflow: "hidden",
+    marginTop: 12,
+  },
+  topicFill: { height: "100%", borderRadius: 99 },
+  topicPct: { fontFamily: MONO, fontSize: 10, fontWeight: "700", alignSelf: "flex-end", marginTop: 4 },
 });

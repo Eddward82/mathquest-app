@@ -1,15 +1,13 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  Dimensions,
 } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router } from "expo-router";
 import { LinearGradient } from "expo-linear-gradient";
 import { Feather } from "@expo/vector-icons";
 import Animated, {
@@ -17,7 +15,7 @@ import Animated, {
   useSharedValue,
   withSpring,
   withTiming,
-  withDelay,
+  withRepeat,
   Easing,
   FadeInDown,
   SlideInDown,
@@ -28,10 +26,18 @@ import { useProgressStore } from "../../src/store/progressStore";
 import { useSubscriptionStore } from "../../src/store/subscriptionStore";
 import { getTodayChallenge, isChallengeCompleted } from "../../src/data/dailyChallenges";
 import { PaywallModal } from "../../src/components/subscription/PaywallModal";
-import { COLORS, BORDER_RADIUS } from "../../src/constants/theme";
 import { Topic, Lesson } from "../../src/types";
 
-const { width } = Dimensions.get("window");
+const BRAND = "#6C5CE7";
+const BRAND_DARK = "#5842DC";
+const BRAND_SOFT = "#EDE9FE";
+const INK = "#0F172A";
+const BODY = "#1E293B";
+const MUTED = "#64748B";
+const FAINT = "#94A3B8";
+const LINE = "#E2E8F0";
+
+const NODE = 36;
 
 export default function LearnScreen() {
   const { user } = useAuthStore();
@@ -68,7 +74,7 @@ export default function LearnScreen() {
   const remaining = remainingToday();
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={styles.safe} edges={["top"]}>
       <PaywallModal visible={showPaywall} onClose={() => setShowPaywall(false)} />
 
       {/* Welcome banner — shown once after onboarding */}
@@ -79,7 +85,7 @@ export default function LearnScreen() {
           style={styles.welcomeBanner}
         >
           <LinearGradient
-            colors={["#4C35DE", "#8B5CF6"]}
+            colors={[BRAND, "#8B5CF6"]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 0 }}
             style={styles.welcomeGradient}
@@ -99,53 +105,56 @@ export default function LearnScreen() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
 
         {/* ── Header ──────────────────────────────────────────────────────── */}
-        <Animated.View entering={FadeInDown.delay(0).springify()} style={styles.header}>
-          <View style={styles.headerRow}>
-            <View>
-              <Text style={styles.title}>Learning Path</Text>
-              <Text style={styles.subtitle}>Master maths topic by topic</Text>
-            </View>
-            {!isPremium && (
-              <TouchableOpacity
-                onPress={() => router.push("/paywall")}
-                style={styles.limitBadge}
-              >
-                <Feather name="zap" size={12} color={remaining === 0 ? "#DC2626" : "#92400E"} />
-                <Text style={[styles.limitText, remaining === 0 && styles.limitTextEmpty]}>
-                  {remaining === 0 ? "Limit hit" : `${remaining} left`}
-                </Text>
-              </TouchableOpacity>
-            )}
-            {isPremium && (
-              <View style={styles.premiumBadge}>
-                <Text style={styles.premiumBadgeText}>👑 Premium</Text>
-              </View>
-            )}
+        <Animated.View entering={FadeInDown.delay(0).springify()} style={styles.headerRow}>
+          <View style={styles.headerText}>
+            <Text style={styles.title}>Learning Path</Text>
+            <Text style={styles.subtitle}>Master maths topic by topic</Text>
           </View>
+          <TouchableOpacity
+            onPress={() => { if (!isPremium) router.push("/paywall"); }}
+            activeOpacity={isPremium ? 1 : 0.8}
+            disabled={isPremium}
+          >
+            <LinearGradient
+              colors={!isPremium && remaining === 0 ? ["#FEF2F2", "#FEE2E2"] : ["#FFFBEB", "#FEF3C7"]}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={[styles.premiumPill, !isPremium && remaining === 0 && styles.premiumPillEmpty]}
+            >
+              <Text style={styles.premiumIcon}>👑</Text>
+              <Text style={[styles.premiumText, !isPremium && remaining === 0 && styles.premiumTextEmpty]}>
+                {isPremium ? "Premium" : remaining === 0 ? "Limit hit" : `${remaining} left`}
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
         </Animated.View>
 
         {/* ── Daily challenge card ─────────────────────────────────────────── */}
-        <Animated.View entering={FadeInDown.delay(40).springify()}>
-          <TouchableOpacity
-            onPress={() => router.push("/daily-challenge")}
-            activeOpacity={0.88}
-            style={styles.challengeCard}
-          >
+        <Animated.View entering={FadeInDown.delay(40).springify()} style={[styles.challengeShadow, challengeDone && styles.challengeShadowDone]}>
+          <TouchableOpacity onPress={() => router.push("/daily-challenge")} activeOpacity={0.9}>
             <LinearGradient
-              colors={challengeDone ? ["#374151", "#4B5563"] : ["#4C35DE", "#6C63FF"]}
+              colors={challengeDone ? ["#475569", "#334155"] : [BRAND, "#5B4AD8", "#4C3CC4"]}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
-              style={styles.challengeGradient}
+              style={styles.challengeCard}
             >
               <View style={styles.challengeOrb} />
-              <View style={styles.challengeLeft}>
+              <View style={styles.challengeOrb2} />
+              <View style={styles.challengeIconTile}>
                 <Text style={styles.challengeEmoji}>{challengeDone ? "✅" : todayChallenge.topicEmoji}</Text>
-                <View style={styles.challengeText}>
-                  <Text style={styles.challengeLabel}>DAILY CHALLENGE</Text>
-                  <Text style={styles.challengeTitle}>
-                    {challengeDone ? "Completed — come back tomorrow!" : todayChallenge.title}
-                  </Text>
+              </View>
+              <View style={styles.challengeText}>
+                <View style={styles.challengeTagRow}>
+                  <View style={styles.challengeTag}>
+                    <Text style={styles.challengeTagText}>DAILY CHALLENGE</Text>
+                  </View>
+                  {!challengeDone && (
+                    <Text style={styles.challengeTime}>• {hoursUntilReset()}h left</Text>
+                  )}
                 </View>
+                <Text style={styles.challengeTitle} numberOfLines={1}>
+                  {challengeDone ? "Done — come back tomorrow!" : todayChallenge.title}
+                </Text>
               </View>
               <View style={styles.challengeRight}>
                 {!challengeDone && (
@@ -153,23 +162,24 @@ export default function LearnScreen() {
                     <Text style={styles.challengeXPText}>+{todayChallenge.xpReward} XP</Text>
                   </View>
                 )}
-                <Feather name="chevron-right" size={18} color="rgba(255,255,255,0.7)" />
+                <View style={styles.challengeChevron}>
+                  <Feather name="chevron-right" size={16} color="rgba(255,255,255,0.85)" />
+                </View>
               </View>
             </LinearGradient>
           </TouchableOpacity>
         </Animated.View>
 
         {/* ── Filter chips ─────────────────────────────────────────────────── */}
-        <Animated.View entering={FadeInDown.delay(60).springify()}>
+        <Animated.View entering={FadeInDown.delay(60).springify()} style={styles.filterOuter}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterRow}>
-            <FilterChip label="All" icon="🌐" active={selectedTopic === null} color={COLORS.primary} onPress={() => setSelectedTopic(null)} />
+            <FilterChip label="All" active={selectedTopic === null} onPress={() => setSelectedTopic(null)} />
             {topics.map((t) => (
               <FilterChip
                 key={t.id}
                 label={t.title}
                 icon={getCategoryEmoji(t.category)}
                 active={selectedTopic === t.id}
-                color={t.color}
                 onPress={() => setSelectedTopic(selectedTopic === t.id ? null : t.id)}
               />
             ))}
@@ -190,7 +200,7 @@ export default function LearnScreen() {
           </Animated.View>
         ))}
 
-        <View style={{ height: 30 }} />
+        <View style={{ height: 24 }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -210,81 +220,74 @@ interface TopicSectionProps {
 const TopicSection: React.FC<TopicSectionProps> = ({ topic, completedIds, completedReviews, onLessonPress, onReviewPress, onPracticePress }) => {
   const completedCount = topic.lessons.filter((l) => completedIds.has(l.id)).length;
   const total = topic.lessons.length;
-  const pct = total > 0 ? (completedCount / total) * 100 : 0;
+  const pct = total > 0 ? Math.round((completedCount / total) * 100) : 0;
+  const allLessonsComplete = completedCount === total;
 
-  const barWidth = useSharedValue(0);
-  const barStyle = useAnimatedStyle(() => ({ width: `${barWidth.value}%` }));
-  useEffect(() => {
-    barWidth.value = withDelay(200, withTiming(pct, { duration: 800, easing: Easing.out(Easing.cubic) }));
-  }, [pct]);
+  // The first unlocked, unfinished lesson is "current" and gets the pulse.
+  const currentIdx = topic.lessons.findIndex((l, idx) =>
+    !completedIds.has(l.id) && (idx === 0 || completedIds.has(topic.lessons[idx - 1].id))
+  );
 
   return (
-    <View style={styles.topicCard}>
-      {/* Topic header */}
+    <View style={styles.topicBlock}>
+      {/* Module card */}
       <LinearGradient
-        colors={[topic.color, shadeColor(topic.color, -18)]}
+        colors={[BRAND, "#4F46E5"]}
         start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
-        style={styles.topicHeader}
+        end={{ x: 1, y: 0 }}
+        style={styles.moduleCard}
       >
-        {/* Decorative orb */}
-        <View style={[styles.topicOrb, { backgroundColor: "rgba(255,255,255,0.08)" }]} />
-
-        <View style={styles.topicHeaderLeft}>
-          <View style={styles.topicIconCircle}>
-            <Text style={styles.topicEmoji}>{getCategoryEmoji(topic.category)}</Text>
+        <View style={styles.moduleLeft}>
+          <View style={styles.moduleTile}>
+            <Text style={styles.moduleEmoji}>{getCategoryEmoji(topic.category)}</Text>
           </View>
-          <View>
-            <Text style={styles.topicTitle}>{topic.title}</Text>
-            <Text style={styles.topicSubtitle}>{completedCount} of {total} complete</Text>
+          <View style={styles.moduleText}>
+            <Text style={styles.moduleTitle} numberOfLines={1}>{topic.title}</Text>
+            <Text style={styles.moduleSub}>{completedCount} of {total} lessons complete</Text>
           </View>
         </View>
-
-        <View style={styles.headerRight}>
+        <View style={styles.moduleRight}>
           {completedCount > 0 && (
             <TouchableOpacity
               onPress={() => onPracticePress(topic.id)}
               style={styles.practiceBtn}
               hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
             >
-              <Feather name="repeat" size={13} color="rgba(255,255,255,0.9)" />
+              <Feather name="refresh-cw" size={12} color="#FFFFFF" />
               <Text style={styles.practiceBtnText}>Practice</Text>
             </TouchableOpacity>
           )}
           <View style={styles.pctBadge}>
-            <Text style={styles.pctText}>{Math.round(pct)}%</Text>
+            <Text style={styles.pctText}>{pct}%</Text>
           </View>
         </View>
       </LinearGradient>
 
-      {/* Progress bar */}
-      <View style={styles.progressTrack}>
-        <Animated.View style={[styles.progressFill, { backgroundColor: topic.color }, barStyle]} />
-      </View>
-
-      {/* Lessons path */}
-      <View style={styles.lessonsContainer}>
+      {/* Milestone pathway */}
+      <View style={styles.pathway}>
+        <LinearGradient
+          colors={["#8B5CF6", "#A78BFA", "#FCD34D"]}
+          style={styles.spine}
+          pointerEvents="none"
+        />
         {topic.lessons.map((lesson, idx) => {
           const isCompleted = completedIds.has(lesson.id);
           const isLocked = idx > 0 && !completedIds.has(topic.lessons[idx - 1].id);
           return (
             <LessonNode
               key={lesson.id}
-              lesson={{ ...lesson, is_locked: isLocked }}
+              lesson={lesson}
               index={idx}
-              total={topic.lessons.length}
               isCompleted={isCompleted}
-              topicColor={topic.color}
+              isLocked={isLocked}
+              isCurrent={idx === currentIdx}
               onPress={() => { if (!isLocked) onLessonPress(lesson.id); }}
             />
           );
         })}
 
-        {/* Topic Review node */}
         <ReviewNode
-          topicId={topic.id}
-          topicColor={topic.color}
-          allLessonsComplete={topic.lessons.every((l) => completedIds.has(l.id))}
+          allLessonsComplete={allLessonsComplete}
           isReviewComplete={completedReviews.has(topic.id)}
           onPress={() => onReviewPress(topic.id)}
         />
@@ -293,205 +296,176 @@ const TopicSection: React.FC<TopicSectionProps> = ({ topic, completedIds, comple
   );
 };
 
+// ── PulseRing ─────────────────────────────────────────────────────────────────
+
+const PulseRing: React.FC<{ color: string }> = ({ color }) => {
+  const t = useSharedValue(0);
+  useEffect(() => {
+    t.value = withRepeat(withTiming(1, { duration: 2400, easing: Easing.bezier(0.24, 0, 0.38, 1) }), -1, false);
+  }, []);
+  const style = useAnimatedStyle(() => ({
+    opacity: 0.45 * (1 - t.value),
+    transform: [{ scale: 1 + t.value * 0.55 }],
+  }));
+  return <Animated.View pointerEvents="none" style={[styles.pulseRing, { backgroundColor: color }, style]} />;
+};
+
 // ── LessonNode ────────────────────────────────────────────────────────────────
 
 interface LessonNodeProps {
   lesson: Lesson;
   index: number;
-  total: number;
   isCompleted: boolean;
-  topicColor: string;
+  isLocked: boolean;
+  isCurrent: boolean;
   onPress: () => void;
 }
 
-const LessonNode: React.FC<LessonNodeProps> = ({ lesson, index, total, isCompleted, topicColor, onPress }) => {
-  const isLocked = lesson.is_locked;
+const LessonNode: React.FC<LessonNodeProps> = ({ lesson, index, isCompleted, isLocked, isCurrent, onPress }) => {
   const scale = useSharedValue(1);
   const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
-  const isLast = index === total - 1;
 
   return (
-    <View style={styles.nodeRow}>
-      {/* Left: connector + node */}
-      <View style={styles.nodeLeft}>
-        {/* Top connector line */}
-        {index > 0 && (
-          <View style={[styles.connectorLine, {
-            backgroundColor: isCompleted ? topicColor : "#E2E8F0",
-          }]} />
-        )}
-
-        {/* The node circle */}
-        <Animated.View style={animStyle}>
-          <TouchableOpacity
-            onPress={onPress}
-            onPressIn={() => { if (!isLocked) scale.value = withSpring(0.9, { stiffness: 500 }); }}
-            onPressOut={() => { scale.value = withSpring(1, { stiffness: 500 }); }}
-            activeOpacity={isLocked ? 1 : 0.9}
-            disabled={isLocked}
+    <Animated.View style={[styles.nodeRow, animStyle]}>
+      <TouchableOpacity
+        onPress={onPress}
+        onPressIn={() => { if (!isLocked) scale.value = withSpring(0.97, { stiffness: 500, damping: 20 }); }}
+        onPressOut={() => { scale.value = withSpring(1, { stiffness: 500, damping: 20 }); }}
+        disabled={isLocked}
+        activeOpacity={1}
+        style={styles.nodeTouch}
+        accessibilityRole="button"
+        accessibilityLabel={`${lesson.title}${isLocked ? ", locked" : isCompleted ? ", completed" : ""}`}
+      >
+        {/* Node */}
+        <View style={styles.nodeWrap}>
+          {isCurrent && <PulseRing color={BRAND} />}
+          <View
             style={[
-              styles.nodeCircle,
-              {
-                backgroundColor: isCompleted ? topicColor : isLocked ? "#F1F5F9" : "#FFFFFF",
-                borderColor: isCompleted ? topicColor : isLocked ? "#CBD5E1" : topicColor,
-                shadowColor: isCompleted || !isLocked ? topicColor : "transparent",
-                shadowOpacity: isCompleted ? 0.4 : isLocked ? 0 : 0.2,
-              },
+              styles.node,
+              isCompleted && styles.nodeDone,
+              isCurrent && styles.nodeCurrent,
+              isLocked && styles.nodeLocked,
             ]}
           >
             {isCompleted ? (
-              <Feather name="check" size={18} color="#FFFFFF" />
+              <Feather name="check" size={16} color="#FFFFFF" />
             ) : isLocked ? (
-              <Feather name="lock" size={15} color="#94A3B8" />
+              <Feather name="lock" size={13} color={FAINT} />
             ) : (
-              <Text style={[styles.nodeNum, { color: topicColor }]}>{index + 1}</Text>
+              <Text style={styles.nodeNum}>{index + 1}</Text>
             )}
-          </TouchableOpacity>
-        </Animated.View>
-
-        {/* Bottom connector line */}
-        {!isLast && (
-          <View style={[styles.connectorLine, {
-            backgroundColor: completedIds_placeholder(lesson) ? topicColor : "#E2E8F0",
-          }]} />
-        )}
-      </View>
-
-      {/* Right: lesson info card */}
-      <TouchableOpacity
-        onPress={onPress}
-        disabled={isLocked}
-        activeOpacity={isLocked ? 1 : 0.85}
-        style={[styles.lessonCard, isLocked && styles.lessonCardLocked,
-          !isLocked && !isCompleted && { borderColor: topicColor + "40" }
-        ]}
-      >
-        <View style={styles.lessonCardContent}>
-          <View style={styles.lessonCardLeft}>
-            <Text style={[styles.lessonName, isLocked && styles.lockedText]}>{lesson.title}</Text>
-            <Text style={[styles.lessonDesc, isLocked && styles.lockedText]} numberOfLines={1}>{lesson.description}</Text>
-          </View>
-          <View style={[styles.xpChip, {
-            backgroundColor: isCompleted ? topicColor + "18" : isLocked ? "#F8FAFC" : topicColor + "12",
-          }]}>
-            <Text style={{ fontSize: 12 }}>⚡</Text>
-            <Text style={[styles.xpChipText, { color: isCompleted || !isLocked ? topicColor : "#94A3B8" }]}>
-              {lesson.xp_reward}
-            </Text>
           </View>
         </View>
-        {isCompleted && (
-          <View style={[styles.completedStripe, { backgroundColor: topicColor }]} />
-        )}
+
+        {/* Card */}
+        <LinearGradient
+          colors={isLocked ? ["#F8FAFC", "#F8FAFC"] : ["#FFFFFF", "#FAFBFF"]}
+          style={[styles.lessonCard, isCurrent && styles.lessonCardCurrent]}
+        >
+          <View style={styles.lessonText}>
+            <Text style={[styles.lessonName, isLocked && styles.lockedText]} numberOfLines={1}>{lesson.title}</Text>
+            <Text style={[styles.lessonDesc, isLocked && styles.lockedText]} numberOfLines={1}>{lesson.description}</Text>
+          </View>
+          <View style={[styles.xpPill, isLocked && styles.xpPillLocked]}>
+            <Text style={styles.xpPillIcon}>⚡</Text>
+            <Text style={[styles.xpPillText, isLocked && { color: FAINT }]}>{lesson.xp_reward}</Text>
+          </View>
+        </LinearGradient>
       </TouchableOpacity>
-    </View>
+    </Animated.View>
   );
 };
 
-// Placeholder function — real completion uses completedIds from store
-function completedIds_placeholder(_lesson: Lesson) { return false; }
-
-// ── ReviewNode ────────────────────────────────────────────────────────────────
+// ── ReviewNode (topic "boss") ─────────────────────────────────────────────────
 
 interface ReviewNodeProps {
-  topicId: string;
-  topicColor: string;
   allLessonsComplete: boolean;
   isReviewComplete: boolean;
   onPress: () => void;
 }
 
-const ReviewNode: React.FC<ReviewNodeProps> = ({
-  topicColor, allLessonsComplete, isReviewComplete, onPress,
-}) => {
+const ReviewNode: React.FC<ReviewNodeProps> = ({ allLessonsComplete, isReviewComplete, onPress }) => {
+  const isLocked = !allLessonsComplete;
+  const isReady = !isLocked && !isReviewComplete;
   const scale = useSharedValue(1);
   const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
-  const isLocked = !allLessonsComplete;
 
   return (
-    <View style={styles.nodeRow}>
-      <View style={styles.nodeLeft}>
-        {/* Top connector from last lesson */}
-        <View style={[styles.connectorLine, { backgroundColor: allLessonsComplete ? topicColor : "#E2E8F0" }]} />
-
-        <Animated.View style={animStyle}>
-          <TouchableOpacity
-            onPress={onPress}
-            onPressIn={() => { if (!isLocked) scale.value = withSpring(0.9, { stiffness: 500 }); }}
-            onPressOut={() => { scale.value = withSpring(1, { stiffness: 500 }); }}
-            disabled={isLocked}
-            activeOpacity={isLocked ? 1 : 0.9}
-            style={[
-              styles.nodeCircle,
-              styles.reviewNodeCircle,
-              {
-                backgroundColor: isReviewComplete ? "#F59E0B" : isLocked ? "#F1F5F9" : "#FFFBEB",
-                borderColor: isReviewComplete ? "#F59E0B" : isLocked ? "#CBD5E1" : "#FCD34D",
-                shadowColor: isLocked ? "transparent" : "#F59E0B",
-                shadowOpacity: isLocked ? 0 : 0.35,
-              },
-            ]}
-          >
-            {isReviewComplete ? (
-              <Feather name="award" size={20} color="#FFFFFF" />
-            ) : isLocked ? (
-              <Feather name="lock" size={15} color="#94A3B8" />
-            ) : (
-              <Text style={styles.reviewNodeEmoji}>🏆</Text>
-            )}
-          </TouchableOpacity>
-        </Animated.View>
-      </View>
-
-      {/* Review card */}
+    <Animated.View style={[styles.nodeRow, animStyle]}>
       <TouchableOpacity
         onPress={onPress}
+        onPressIn={() => { if (!isLocked) scale.value = withSpring(0.97, { stiffness: 500, damping: 20 }); }}
+        onPressOut={() => { scale.value = withSpring(1, { stiffness: 500, damping: 20 }); }}
         disabled={isLocked}
-        activeOpacity={isLocked ? 1 : 0.85}
-        style={[
-          styles.lessonCard,
-          styles.reviewCard,
-          isLocked && styles.lessonCardLocked,
-          !isLocked && !isReviewComplete && { borderColor: "#FCD34D", borderWidth: 2 },
-          isReviewComplete && { borderColor: "#F59E0B", borderWidth: 2 },
-        ]}
+        activeOpacity={1}
+        style={styles.nodeTouch}
+        accessibilityRole="button"
+        accessibilityLabel={`Topic review${isLocked ? ", locked" : isReviewComplete ? ", completed" : ""}`}
       >
-        <View style={styles.lessonCardContent}>
-          <View style={styles.lessonCardLeft}>
-            <Text style={[styles.reviewCardTitle, isLocked && styles.lockedText]}>
-              {isReviewComplete ? "✅ Topic Review Complete" : "🏆 Topic Review"}
-            </Text>
-            <Text style={[styles.reviewCardDesc, isLocked && styles.lockedText]}>
-              {isLocked
-                ? "Complete all lessons to unlock"
-                : isReviewComplete
-                ? "Well done! You aced this topic"
-                : "10 questions · 150 XP bonus"}
-            </Text>
-          </View>
-          {!isLocked && (
-            <View style={[styles.xpChip, { backgroundColor: isReviewComplete ? "#FEF3C7" : "#FFFBEB" }]}>
-              <Text style={{ fontSize: 12 }}>⚡</Text>
-              <Text style={[styles.xpChipText, { color: "#D97706" }]}>150</Text>
+        <View style={styles.nodeWrap}>
+          {isReady && <PulseRing color="#F59E0B" />}
+          {isLocked ? (
+            <View style={[styles.node, styles.nodeLocked]}>
+              <Feather name="lock" size={13} color={FAINT} />
             </View>
+          ) : (
+            <LinearGradient
+              colors={["#F59E0B", "#FACC15"]}
+              start={{ x: 0, y: 1 }}
+              end={{ x: 1, y: 0 }}
+              style={[styles.node, styles.nodeBoss]}
+            >
+              {isReviewComplete
+                ? <Feather name="award" size={16} color="#FFFFFF" />
+                : <Text style={styles.bossEmoji}>🏆</Text>}
+            </LinearGradient>
           )}
         </View>
-        {isReviewComplete && <View style={[styles.completedStripe, { backgroundColor: "#F59E0B" }]} />}
-        {!isLocked && !isReviewComplete && (
-          <View style={styles.reviewBonusBanner}>
-            <Text style={styles.reviewBonusText}>BONUS CHALLENGE · Score 7/10 to earn your topic badge</Text>
+
+        <LinearGradient
+          colors={isLocked ? ["#F8FAFC", "#F8FAFC"] : ["#FFFBEB", "#FFFFFF", "#FAF5FF"]}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={[styles.lessonCard, isLocked ? styles.bossCardLocked : styles.bossCard]}
+        >
+          <View style={styles.lessonText}>
+            <View style={[styles.bossTag, isLocked && styles.bossTagLocked]}>
+              <Text style={[styles.bossTagText, isLocked && { color: FAINT }]}>TOPIC REVIEW</Text>
+            </View>
+            <Text style={[styles.bossTitle, isLocked && styles.lockedText]}>
+              {isReviewComplete ? "Review complete" : "Mixed Challenge"}
+            </Text>
+            <Text style={[styles.lessonDesc, isLocked && styles.lockedText]} numberOfLines={1}>
+              {isLocked
+                ? "Finish every lesson to unlock"
+                : isReviewComplete
+                ? "Well done — you aced this topic"
+                : "10 questions · score 7+ for a badge"}
+            </Text>
           </View>
-        )}
+          {isReady ? (
+            <View style={styles.playBtn}>
+              <Text style={styles.playBtnText}>Play</Text>
+              <Feather name="play" size={12} color="#FFFFFF" />
+            </View>
+          ) : (
+            <View style={[styles.xpPill, isLocked && styles.xpPillLocked]}>
+              <Text style={styles.xpPillIcon}>⚡</Text>
+              <Text style={[styles.xpPillText, isLocked && { color: FAINT }]}>150</Text>
+            </View>
+          )}
+        </LinearGradient>
       </TouchableOpacity>
-    </View>
+    </Animated.View>
   );
 };
 
 // ── FilterChip ────────────────────────────────────────────────────────────────
 
 const FilterChip: React.FC<{
-  label: string; icon: string; active: boolean; color: string; onPress: () => void;
-}> = ({ label, icon, active, color, onPress }) => {
+  label: string; icon?: string; active: boolean; onPress: () => void;
+}> = ({ label, icon, active, onPress }) => {
   const scale = useSharedValue(1);
   const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
   return (
@@ -501,16 +475,25 @@ const FilterChip: React.FC<{
         onPressIn={() => { scale.value = withSpring(0.94, { stiffness: 500 }); }}
         onPressOut={() => { scale.value = withSpring(1, { stiffness: 500 }); }}
         activeOpacity={1}
-        style={[styles.filterChip, active && { backgroundColor: color, borderColor: color }]}
+        style={[styles.filterChip, active && styles.filterChipActive]}
       >
-        <Text style={styles.filterIcon}>{icon}</Text>
-        <Text style={[styles.filterLabel, { color: active ? "#FFFFFF" : "#6B7280" }]}>{label}</Text>
+        {icon
+          ? <Text style={styles.filterIcon}>{icon}</Text>
+          : <Feather name="globe" size={13} color={active ? "#FFFFFF" : MUTED} />}
+        <Text style={[styles.filterLabel, active && styles.filterLabelActive]}>{label}</Text>
       </TouchableOpacity>
     </Animated.View>
   );
 };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
+
+/** Daily challenges roll over at UTC midnight (see getTodayChallenge). */
+function hoursUntilReset() {
+  const now = new Date();
+  const next = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1);
+  return Math.max(1, Math.ceil((next - now.getTime()) / 3_600_000));
+}
 
 function getCategoryEmoji(category: string) {
   const map: Record<string, string> = {
@@ -529,32 +512,11 @@ function getCategoryEmoji(category: string) {
   return map[category] ?? "📚";
 }
 
-function shadeColor(hex: string, amount: number): string {
-  const num = parseInt(hex.replace("#", ""), 16);
-  const r = Math.min(255, Math.max(0, (num >> 16) + amount));
-  const g = Math.min(255, Math.max(0, ((num >> 8) & 0xff) + amount));
-  const b = Math.min(255, Math.max(0, (num & 0xff) + amount));
-  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, "0")}`;
-}
-
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: "#F4F5FF" },
-  content: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 32, gap: 16 },
-
-  // Daily challenge card
-  challengeCard: { borderRadius: 20, overflow: "hidden", shadowColor: COLORS.primary, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.25, shadowRadius: 14, elevation: 8 },
-  challengeGradient: { flexDirection: "row", alignItems: "center", padding: 16, gap: 12, overflow: "hidden" },
-  challengeOrb: { position: "absolute", top: -20, right: 60, width: 80, height: 80, borderRadius: 40, backgroundColor: "rgba(255,255,255,0.06)" },
-  challengeLeft: { flex: 1, flexDirection: "row", alignItems: "center", gap: 12 },
-  challengeEmoji: { fontSize: 32 },
-  challengeText: { flex: 1, gap: 2 },
-  challengeLabel: { fontSize: 9, fontWeight: "800", color: "rgba(255,255,255,0.6)", letterSpacing: 1 },
-  challengeTitle: { fontSize: 14, fontWeight: "800", color: "#FFFFFF", lineHeight: 19 },
-  challengeRight: { flexDirection: "row", alignItems: "center", gap: 8 },
-  challengeXP: { backgroundColor: "rgba(255,255,255,0.18)", borderRadius: 99, paddingHorizontal: 10, paddingVertical: 5, borderWidth: 1, borderColor: "rgba(255,255,255,0.25)" },
-  challengeXPText: { fontSize: 12, fontWeight: "800", color: "#FFFFFF" },
+  safe: { flex: 1, backgroundColor: "#FCFCFF" },
+  content: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 32, gap: 16 },
 
   // Welcome banner
   welcomeBanner: { marginHorizontal: 12, marginTop: 8, borderRadius: 16, overflow: "hidden" },
@@ -567,178 +529,289 @@ const styles = StyleSheet.create({
   welcomeTitle: { fontSize: 14, fontWeight: "800", color: "#FFFFFF" },
   welcomeSub: { fontSize: 12, color: "rgba(255,255,255,0.78)", fontWeight: "500" },
 
-  header: { gap: 3 },
-  headerRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  title: { fontSize: 28, fontWeight: "900", color: "#111827", letterSpacing: -0.8 },
-  subtitle: { fontSize: 14, color: "#6B7280", fontWeight: "500" },
-  limitBadge: {
+  // Header
+  headerRow: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 5,
-    backgroundColor: "#FEF3C7",
-    borderWidth: 1.5,
+    justifyContent: "space-between",
+    paddingHorizontal: 4,
+    gap: 12,
+  },
+  headerText: { flex: 1 },
+  title: { fontSize: 24, fontWeight: "800", color: INK, letterSpacing: -0.6 },
+  subtitle: { fontSize: 12, color: FAINT, fontWeight: "500", marginTop: 2 },
+  premiumPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 99,
+    borderWidth: 1,
     borderColor: "#FDE68A",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 99,
   },
-  limitText: { fontSize: 12, fontWeight: "800", color: "#92400E" },
-  limitTextEmpty: { color: "#DC2626" },
-  premiumBadge: {
-    backgroundColor: "#EDE9FF",
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 99,
-    borderWidth: 1.5,
-    borderColor: "#C4B5FD",
-  },
-  premiumBadgeText: { fontSize: 12, fontWeight: "800", color: COLORS.primary },
+  premiumPillEmpty: { borderColor: "#FECACA" },
+  premiumIcon: { fontSize: 12 },
+  premiumText: { fontSize: 12, fontWeight: "800", color: "#B45309", letterSpacing: 0.3 },
+  premiumTextEmpty: { color: "#DC2626" },
 
-  filterRow: { gap: 8, paddingVertical: 4 },
+  // Daily challenge
+  challengeShadow: {
+    borderRadius: 18,
+    backgroundColor: BRAND,
+    shadowColor: BRAND,
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    elevation: 8,
+  },
+  challengeShadowDone: { backgroundColor: "#475569", shadowColor: "#000", shadowOpacity: 0.12 },
+  challengeCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    padding: 16,
+    borderRadius: 18,
+    overflow: "hidden",
+  },
+  challengeOrb: {
+    position: "absolute", top: -40, right: -40,
+    width: 112, height: 112, borderRadius: 56,
+    backgroundColor: "rgba(255,255,255,0.08)",
+  },
+  challengeOrb2: {
+    position: "absolute", bottom: -40, left: -24,
+    width: 96, height: 96, borderRadius: 48,
+    backgroundColor: "rgba(167,139,250,0.18)",
+  },
+  challengeIconTile: {
+    width: 48, height: 48, borderRadius: 14,
+    backgroundColor: "rgba(255,255,255,0.15)",
+    borderWidth: 1, borderColor: "rgba(255,255,255,0.25)",
+    alignItems: "center", justifyContent: "center",
+  },
+  challengeEmoji: { fontSize: 24 },
+  challengeText: { flex: 1 },
+  challengeTagRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  challengeTag: {
+    backgroundColor: "rgba(255,255,255,0.2)",
+    borderRadius: 4,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+  },
+  challengeTagText: { fontSize: 9, fontWeight: "800", color: "rgba(255,255,255,0.92)", letterSpacing: 0.8 },
+  challengeTime: { fontSize: 10, fontWeight: "500", color: "#E9D5FF" },
+  challengeTitle: { fontSize: 15, fontWeight: "700", color: "#FFFFFF", letterSpacing: -0.2, marginTop: 3 },
+  challengeRight: { flexDirection: "row", alignItems: "center", gap: 8 },
+  challengeXP: {
+    backgroundColor: "rgba(255,255,255,0.2)",
+    borderWidth: 1, borderColor: "rgba(255,255,255,0.2)",
+    borderRadius: 99, paddingHorizontal: 10, paddingVertical: 4,
+  },
+  challengeXPText: { fontSize: 12, fontWeight: "700", color: "#FFFFFF" },
+  challengeChevron: {
+    width: 28, height: 28, borderRadius: 14,
+    backgroundColor: "rgba(255,255,255,0.1)",
+    alignItems: "center", justifyContent: "center",
+  },
+
+  // Filter chips
+  filterOuter: { marginHorizontal: -16 },
+  filterRow: { gap: 8, paddingVertical: 4, paddingHorizontal: 16 },
   filterChip: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: BORDER_RADIUS.full,
-    borderWidth: 1.5,
-    borderColor: "#E2E8F0",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 99,
+    borderWidth: 1,
+    borderColor: LINE,
     backgroundColor: "#FFFFFF",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
-    shadowRadius: 4,
+    shadowRadius: 2,
     elevation: 1,
   },
-  filterIcon: { fontSize: 14 },
-  filterLabel: { fontSize: 13, fontWeight: "700" },
-
-  // Topic card container
-  topicCard: {
-    backgroundColor: "#FFFFFF",
-    borderRadius: 22,
-    overflow: "hidden",
-    shadowColor: "#6C63FF",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.1,
-    shadowRadius: 16,
-    elevation: 6,
-    borderWidth: 1,
-    borderColor: "#F0EDFF",
+  filterChipActive: {
+    backgroundColor: BRAND,
+    borderColor: BRAND,
+    shadowColor: BRAND,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
-  topicHeader: {
+  filterIcon: { fontSize: 12 },
+  filterLabel: { fontSize: 12, fontWeight: "600", color: "#475569" },
+  filterLabelActive: { color: "#FFFFFF", fontWeight: "700" },
+
+  // Topic block
+  topicBlock: { gap: 12 },
+  moduleCard: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     padding: 16,
-    overflow: "hidden",
+    borderRadius: 18,
+    gap: 10,
+    shadowColor: "#6366F1",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 12,
+    elevation: 3,
   },
-  topicOrb: { position: "absolute", top: -20, right: -20, width: 100, height: 100, borderRadius: 50 },
-  topicHeaderLeft: { flexDirection: "row", alignItems: "center", gap: 12 },
-  topicIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 14,
-    backgroundColor: "rgba(255,255,255,0.22)",
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.3)",
+  moduleLeft: { flexDirection: "row", alignItems: "center", gap: 12, flex: 1 },
+  moduleTile: {
+    width: 44, height: 44, borderRadius: 14,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    borderWidth: 1, borderColor: "rgba(255,255,255,0.25)",
+    alignItems: "center", justifyContent: "center",
   },
-  topicEmoji: { fontSize: 22 },
-  topicTitle: { fontSize: 17, fontWeight: "800", color: "#FFFFFF", letterSpacing: -0.3 },
-  topicSubtitle: { fontSize: 12, color: "rgba(255,255,255,0.75)", marginTop: 1, fontWeight: "500" },
-  headerRight: { flexDirection: "row", alignItems: "center", gap: 8 },
+  moduleEmoji: { fontSize: 20 },
+  moduleText: { flex: 1 },
+  moduleTitle: { fontSize: 16, fontWeight: "700", color: "#FFFFFF", letterSpacing: -0.2 },
+  moduleSub: { fontSize: 12, color: BRAND_SOFT, fontWeight: "500", marginTop: 2 },
+  moduleRight: { flexDirection: "row", alignItems: "center", gap: 8 },
   practiceBtn: {
     flexDirection: "row", alignItems: "center", gap: 4,
-    backgroundColor: "rgba(255,255,255,0.18)",
-    borderRadius: 99, paddingHorizontal: 10, paddingVertical: 6,
-    borderWidth: 1, borderColor: "rgba(255,255,255,0.3)",
+    backgroundColor: "rgba(255,255,255,0.15)",
+    borderWidth: 1, borderColor: "rgba(255,255,255,0.2)",
+    borderRadius: 10, paddingHorizontal: 10, paddingVertical: 6,
   },
-  practiceBtnText: { color: "rgba(255,255,255,0.9)", fontSize: 11, fontWeight: "700" },
+  practiceBtnText: { color: "#FFFFFF", fontSize: 11, fontWeight: "600" },
   pctBadge: {
-    backgroundColor: "rgba(255,255,255,0.22)",
+    backgroundColor: "#FFFFFF",
     borderRadius: 10,
-    paddingHorizontal: 12,
+    paddingHorizontal: 10,
     paddingVertical: 6,
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.3)",
   },
-  pctText: { color: "#FFFFFF", fontWeight: "900", fontSize: 14 },
+  pctText: { color: BRAND_DARK, fontWeight: "800", fontSize: 12 },
 
-  progressTrack: { height: 3, backgroundColor: "#F1F5F9", overflow: "hidden" },
-  progressFill: { height: "100%", minWidth: 3 },
-
-  lessonsContainer: { padding: 16, gap: 0 },
-
-  // Lesson node row
-  nodeRow: { flexDirection: "row", alignItems: "stretch", gap: 12, minHeight: 72 },
-  nodeLeft: { alignItems: "center", width: 44 },
-  connectorLine: { width: 2, flex: 1, minHeight: 8 },
-  nodeCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+  // Pathway
+  pathway: { gap: 14, paddingBottom: 8, paddingLeft: 2 },
+  spine: {
+    position: "absolute",
+    left: 2 + NODE / 2 - 1,
+    top: NODE / 2 + 12,
+    bottom: NODE / 2 + 20,
+    width: 2,
+    borderRadius: 1,
+  },
+  nodeRow: {},
+  nodeTouch: { flexDirection: "row", alignItems: "center", gap: 12 },
+  nodeWrap: { width: NODE, height: NODE, alignItems: "center", justifyContent: "center" },
+  pulseRing: {
+    position: "absolute",
+    width: NODE,
+    height: NODE,
+    borderRadius: NODE / 2,
+  },
+  node: {
+    width: NODE,
+    height: NODE,
+    borderRadius: NODE / 2,
     alignItems: "center",
     justifyContent: "center",
-    borderWidth: 2.5,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 8,
-    elevation: 4,
     backgroundColor: "#FFFFFF",
+    borderWidth: 2,
+    borderColor: BRAND,
   },
-  nodeNum: { fontWeight: "900", fontSize: 16 },
+  nodeDone: {
+    backgroundColor: BRAND,
+    borderColor: "#FFFFFF",
+    shadowColor: BRAND,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  nodeCurrent: {
+    borderWidth: 2.5,
+    shadowColor: BRAND,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 4,
+  },
+  nodeLocked: { backgroundColor: "#F1F5F9", borderColor: "#FFFFFF", borderWidth: 2 },
+  nodeBoss: {
+    borderColor: "#FFFFFF",
+    shadowColor: "#F59E0B",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  nodeNum: { fontWeight: "800", fontSize: 14, color: BRAND },
+  bossEmoji: { fontSize: 14 },
 
-  // Lesson card
   lessonCard: {
     flex: 1,
-    backgroundColor: "#FAFAFA",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+    padding: 14,
     borderRadius: 16,
-    borderWidth: 1.5,
-    borderColor: "#F1F5F9",
-    overflow: "hidden",
-    alignSelf: "center",
-    marginVertical: 6,
+    borderWidth: 1,
+    borderColor: LINE,
   },
-  lessonCardLocked: { opacity: 0.55 },
-  lessonCardContent: { flexDirection: "row", alignItems: "center", padding: 12, gap: 10 },
-  lessonCardLeft: { flex: 1, gap: 3 },
-  lessonName: { fontSize: 14, fontWeight: "700", color: "#111827", letterSpacing: -0.1 },
-  lessonDesc: { fontSize: 12, color: "#6B7280", fontWeight: "500" },
-  lockedText: { color: "#9CA3AF" },
-  xpChip: {
+  lessonCardCurrent: { borderColor: "#C4B5FD" },
+  lessonText: { flex: 1 },
+  lessonName: { fontSize: 14, fontWeight: "700", color: BODY, letterSpacing: -0.2 },
+  lessonDesc: { fontSize: 12, color: MUTED, marginTop: 2 },
+  lockedText: { color: FAINT },
+  xpPill: {
     flexDirection: "row",
     alignItems: "center",
     gap: 3,
-    paddingHorizontal: 9,
-    paddingVertical: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
     borderRadius: 99,
+    backgroundColor: "#FFFBEB",
+    borderWidth: 1,
+    borderColor: "#FDE68A",
   },
-  xpChipText: { fontSize: 12, fontWeight: "800" },
-  completedStripe: { height: 3 },
+  xpPillLocked: { backgroundColor: "#F1F5F9", borderColor: "#F1F5F9" },
+  xpPillIcon: { fontSize: 11 },
+  xpPillText: { fontSize: 12, fontWeight: "700", color: "#B45309" },
 
-  reviewNodeCircle: {
+  // Boss card
+  bossCard: {
+    borderWidth: 2,
+    borderColor: "#FCD34D",
+    shadowColor: BRAND,
     shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
     shadowRadius: 10,
-    elevation: 5,
+    elevation: 3,
   },
-  reviewNodeEmoji: { fontSize: 20 },
-  reviewCard: { backgroundColor: "#FFFBEB" },
-  reviewCardTitle: { fontSize: 14, fontWeight: "800", color: "#111827" },
-  reviewCardDesc: { fontSize: 12, color: "#6B7280", fontWeight: "500", marginTop: 2 },
-  reviewBonusBanner: {
-    backgroundColor: "#FEF3C7",
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderTopWidth: 1,
-    borderTopColor: "#FDE68A",
+  bossCardLocked: { borderStyle: "dashed", borderColor: "#CBD5E1", borderWidth: 1.5 },
+  bossTag: {
+    alignSelf: "flex-start",
+    backgroundColor: "rgba(253,230,138,0.6)",
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 1,
   },
-  reviewBonusText: {
-    fontSize: 10,
-    fontWeight: "800",
-    color: "#92400E",
-    letterSpacing: 0.3,
-    textTransform: "uppercase",
+  bossTagLocked: { backgroundColor: "#F1F5F9" },
+  bossTagText: { fontSize: 9, fontWeight: "900", color: "#B45309", letterSpacing: 0.8 },
+  bossTitle: { fontSize: 14, fontWeight: "700", color: INK, letterSpacing: -0.2, marginTop: 3 },
+  playBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    height: 36,
+    paddingHorizontal: 14,
+    borderRadius: 12,
+    backgroundColor: BRAND,
+    shadowColor: BRAND,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
+  playBtnText: { color: "#FFFFFF", fontSize: 12, fontWeight: "700" },
 });
