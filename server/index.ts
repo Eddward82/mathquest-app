@@ -57,15 +57,24 @@ function getFirebaseApp(): App {
   return firebaseApp;
 }
 
+// A token, when sent, is always verified so daily quotas and rate limits count
+// per user rather than per IP (many real users share carrier/school IPs). Only
+// a missing or invalid token is tolerated while enforcement is off.
 async function requireFirebaseUser(req: Request, res: Response, next: NextFunction) {
-  if (!REQUIRE_FIREBASE_AUTH) return next();
   const match = /^Bearer (.+)$/.exec(req.header("authorization") ?? "");
-  if (!match) return res.status(401).json({ error: "Please sign in to use the AI tutor." });
+  if (!match) {
+    if (!REQUIRE_FIREBASE_AUTH) return next();
+    return res.status(401).json({ error: "Please sign in to use the AI tutor." });
+  }
   try {
     const decoded = await getAuth(getFirebaseApp()).verifyIdToken(match[1]);
     res.locals.uid = decoded.uid;
     next();
-  } catch {
+  } catch (err: any) {
+    if (!REQUIRE_FIREBASE_AUTH) {
+      console.warn("ID token not verified (not enforced):", err?.message);
+      return next();
+    }
     return res.status(401).json({ error: "Your session has expired. Please sign in again." });
   }
 }
