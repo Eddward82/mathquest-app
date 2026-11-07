@@ -13,7 +13,15 @@ import OpenAI from "openai";
 import { initializeApp, applicationDefault, cert, App } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getAppCheck } from "firebase-admin/app-check";
-import { reserveAiCall } from "./usageGuard";
+import {
+  configFromEnv,
+  createUsageGuard,
+  firebaseAccountLookup,
+  firestoreUsageStore,
+  ipSubject,
+  revenueCatHasPremium,
+  sendAlert,
+} from "./usageGuard";
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -22,8 +30,18 @@ const PORT = process.env.PORT ?? 3000;
 // (the only clients CORS gates) get blocked by default.
 
 // Behind a hosting proxy (Render/Railway/etc.), trust the forwarded IP so the
-// rate limiter keys on the real client address rather than the proxy's.
-app.set("trust proxy", 1);
+// rate limiter keys on the real client address rather than the proxy's. The
+// right hop count depends on the host: if it's too low, every user looks like
+// the same proxy IP and shares one per-IP limit. Check it with DEBUG_CLIENT_IP.
+app.set("trust proxy", Number.parseInt(process.env.TRUST_PROXY_HOPS ?? "1", 10));
+
+// Off by default. Set DEBUG_CLIENT_IP=true briefly after deploying, and compare
+// `ip` here with your real public IP to confirm TRUST_PROXY_HOPS is right.
+if (process.env.DEBUG_CLIENT_IP === "true") {
+  app.get("/api/debug/client-ip", (req, res) => {
+    res.json({ ip: req.ip, forwardedFor: req.header("x-forwarded-for") ?? null });
+  });
+}
 
 // Bound request bodies — a question is never anywhere near 10 KB.
 app.use(express.json({ limit: "10kb" }));
@@ -57,9 +75,26 @@ function getFirebaseApp(): App {
   return firebaseApp;
 }
 
+const usageGuard = createUsageGuard(configFromEnv(), {
+  store: firestoreUsageStore(getFirebaseApp),
+  findAccount: firebaseAccountLookup(getFirebaseApp),
+  hasPremium: revenueCatHasPremium,
+  alert: sendAlert,
+});
+
+// Reserves one AI call, or sends the refusal and returns false.
+async function reserveAiCall(req: Request, res: Response): Promise<boolean> {
+  const decision = await usageGuard.reserve({ uid: res.locals.uid, ip: req.ip });
+  if (decision.ok) return true;
+  res.status(decision.status).json({ code: decision.code, error: decision.error });
+  return false;
+}
+
 // A token, when sent, is always verified so daily quotas and rate limits count
 // per user rather than per IP (many real users share carrier/school IPs). Only
 // a missing or invalid token is tolerated while enforcement is off.
+// checkRevoked rejects tokens of deleted or disabled accounts straight away,
+// rather than letting them work until the token expires up to an hour later.
 async function requireFirebaseUser(req: Request, res: Response, next: NextFunction) {
   const match = /^Bearer (.+)$/.exec(req.header("authorization") ?? "");
   if (!match) {
@@ -67,7 +102,7 @@ async function requireFirebaseUser(req: Request, res: Response, next: NextFuncti
     return res.status(401).json({ error: "Please sign in to use the AI tutor." });
   }
   try {
-    const decoded = await getAuth(getFirebaseApp()).verifyIdToken(match[1]);
+    const decoded = await getAuth(getFirebaseApp()).verifyIdToken(match[1], true);
     res.locals.uid = decoded.uid;
     next();
   } catch (err: any) {
@@ -108,8 +143,21 @@ const aiLimiter = rateLimit({
   max: 30,
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req, res) => (res.locals.uid ? `uid:${res.locals.uid}` : req.ip ?? "unknown"),
+  keyGenerator: (req, res) => (res.locals.uid ? `uid:${res.locals.uid}` : ipSubject(req.ip)),
   message: { error: "Too many requests — please slow down and try again shortly." },
+});
+
+// Rate limit across every account on one IP, so a script can't dodge the limit
+// above by cycling through accounts. Generous, as schools and carriers put many
+// real users behind one address. Runs first, so floods are turned away before
+// any token verification work.
+const ipLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: Number.parseInt(process.env.AI_IP_RATE_LIMIT ?? "120", 10),
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => `ip:${ipSubject(req.ip)}`,
+  message: { error: "Too many requests from this network — please try again shortly." },
 });
 
 // Shared-secret check. The mobile app sends `x-app-key`; the server compares it
@@ -125,7 +173,7 @@ function requireAppKey(req: Request, res: Response, next: NextFunction) {
   next();
 }
 
-app.use("/api/explain", requireAppKey, requireAppCheck, requireFirebaseUser, aiLimiter);
+app.use("/api/explain", requireAppKey, ipLimiter, requireAppCheck, requireFirebaseUser, aiLimiter);
 
 // The app caps questions at 500 chars; anything much longer is not coming from
 // the app and would only run up OpenAI token costs.
@@ -186,7 +234,7 @@ function abortOnDisconnect(res: Response): AbortSignal {
 app.post("/api/explain", async (req, res) => {
   const question = validateQuestion(req, res);
   if (question === null) return;
-  if (!(await reserveAiCall(getFirebaseApp(), req, res))) return;
+  if (!(await reserveAiCall(req, res))) return;
 
   const signal = abortOnDisconnect(res);
   try {
@@ -218,7 +266,7 @@ app.post("/api/explain", async (req, res) => {
 app.post("/api/explain/stream", async (req, res) => {
   const question = validateQuestion(req, res);
   if (question === null) return;
-  if (!(await reserveAiCall(getFirebaseApp(), req, res))) return;
+  if (!(await reserveAiCall(req, res))) return;
 
   res.setHeader("Content-Type", "text/event-stream");
   res.setHeader("Cache-Control", "no-cache");
