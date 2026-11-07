@@ -43,21 +43,11 @@ await check("other user CANNOT list users", assertFails(getDocs(collection(alice
 await check("signed-in user reads leaderboard", assertSucceeds(getDocs(query(collection(bob, "leaderboard"), orderBy("total_xp", "desc")))));
 await check("signed-out user CANNOT read leaderboard", assertFails(getDocs(collection(anon, "leaderboard"))));
 
-// Item 3 — XP cheating limits
-await check("+200 XP after cooldown OK", assertSucceeds(setDoc(doc(alice, "leaderboard/alice"), entry(1200))));
-await check("second write within 10s REJECTED", assertFails(setDoc(doc(alice, "leaderboard/alice"), entry(1250))));
-await env.withSecurityRulesDisabled((ctx) => setDoc(doc(ctx.firestore(), "leaderboard/alice"), {
-  display_name: "Ada", total_xp: 1200, current_level: 3, updated_at: Timestamp.fromMillis(Date.now() - 60_000),
-}));
-await check("+201 XP REJECTED", assertFails(setDoc(doc(alice, "leaderboard/alice"), entry(1401))));
-await check("XP decrease REJECTED", assertFails(setDoc(doc(alice, "leaderboard/alice"), entry(1100))));
-await check("wrong level REJECTED", assertFails(setDoc(doc(alice, "leaderboard/alice"), entry(1300, { current_level: 50 }))));
-await check("extra field REJECTED", assertFails(setDoc(doc(alice, "leaderboard/alice"), entry(1300, { email: "x" }))));
-await check("client-chosen timestamp REJECTED", assertFails(setDoc(doc(alice, "leaderboard/alice"), entry(1300, { updated_at: Timestamp.fromMillis(0) }))));
+// Item 3 — only the server writes the leaderboard
+await check("raising own XP REJECTED", assertFails(setDoc(doc(alice, "leaderboard/alice"), entry(1200))));
+await check("lowering own XP REJECTED", assertFails(setDoc(doc(alice, "leaderboard/alice"), entry(1100))));
 await check("writing someone else's entry REJECTED", assertFails(setDoc(doc(bob, "leaderboard/alice"), entry(1300))));
-await check("new entry at 150 XP OK", assertSucceeds(setDoc(doc(bob, "leaderboard/bob"), entry(150))));
-await check("new entry at 99999 XP REJECTED", assertFails(setDoc(doc(env.authenticatedContext("carol").firestore(), "leaderboard/carol"), entry(99999))));
-await check("float XP REJECTED", assertFails(setDoc(doc(env.authenticatedContext("dan").firestore(), "leaderboard/dan"), entry(10.5, { current_level: 1 }))));
+await check("creating own entry REJECTED", assertFails(setDoc(doc(bob, "leaderboard/bob"), entry(150))));
 
 // Item 1 — owner can delete everything account deletion touches
 await check("owner deletes progress doc", assertSucceeds(deleteDoc(doc(alice, "users/alice/progress/l1"))));
@@ -65,14 +55,15 @@ await check("owner deletes leaderboard entry", assertSucceeds(deleteDoc(doc(alic
 await check("owner deletes profile", assertSucceeds(deleteDoc(doc(alice, "users/alice"))));
 await check("other user CANNOT delete leaderboard entry", assertFails(deleteDoc(doc(alice, "leaderboard/bob"))));
 
-// Item 6 — started-lesson list may only grow
+// Item 6 — only the server changes the free-lesson count
 await env.withSecurityRulesDisabled((ctx) => setDoc(doc(ctx.firestore(), "users/bob"), {
   email: "bob@example.com", started_lesson_ids: ["l1", "l2"], lessons_started_total: 2,
 }));
-await check("adding a started lesson OK", assertSucceeds(setDoc(doc(bob, "users/bob"), { started_lesson_ids: ["l1", "l2", "l3"] }, { merge: true })));
+await check("adding a started lesson REJECTED", assertFails(setDoc(doc(bob, "users/bob"), { started_lesson_ids: ["l1", "l2", "l3"] }, { merge: true })));
 await check("removing started lessons REJECTED", assertFails(setDoc(doc(bob, "users/bob"), { started_lesson_ids: ["l1"] }, { merge: true })));
 await check("lowering legacy total REJECTED", assertFails(setDoc(doc(bob, "users/bob"), { lessons_started_total: 0 }, { merge: true })));
-await check("unrelated profile update OK", assertSucceeds(setDoc(doc(bob, "users/bob"), { skill_level: "advanced" }, { merge: true })));
+await check("new profile with started lessons REJECTED", assertFails(setDoc(doc(env.authenticatedContext("ida").firestore(), "users/ida"), { email: "i@example.com", started_lesson_ids: [] })));
+await check("unrelated profile update OK, keeping the count", assertSucceeds(setDoc(doc(bob, "users/bob"), { skill_level: "advanced" }, { merge: true })));
 
 // Existing protections still hold
 await check("premium flag write still REJECTED", assertFails(setDoc(doc(bob, "users/bob"), { is_premium: true }, { merge: true })));

@@ -13,7 +13,7 @@ export interface DailyChallenge {
 }
 
 // 30 daily challenges — indexed by day-of-year mod 30
-const CHALLENGES: Omit<DailyChallenge, "date">[] = [
+export const CHALLENGES: Omit<DailyChallenge, "date">[] = [
   {
     id: "dc_001",
     title: "The Fraction Puzzle",

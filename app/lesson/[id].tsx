@@ -77,15 +77,23 @@ export default function LessonScreen() {
       return;
     }
 
+    let left = false;
     const lesson = getLessonById(id);
     if (lesson) {
       startLesson(lesson, user?.skill_level ?? "beginner");
-      recordLessonStarted(user?.id ?? "guest", lesson.id);
+      // Doesn't wait for the server, which can take a while to wake up. If it
+      // says the free lessons are used up, go back to where the paywall shows.
+      recordLessonStarted(user?.id ?? "guest", lesson.id).then((stillAllowed) => {
+        if (!stillAllowed && !left) router.replace("/(tabs)/learn");
+      });
     } else {
       Alert.alert("Error", "Lesson not found");
       router.back();
     }
-    return () => resetLesson();
+    return () => {
+      left = true;
+      resetLesson();
+    };
   }, [id]);
 
   // Bounce XP display when XP changes

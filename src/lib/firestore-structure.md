@@ -68,9 +68,9 @@ One document per unlocked achievement. Document ID = achievement ID.
 
 ### `leaderboard/{uid}`
 Public rank entry, readable by any signed-in user. `users/{uid}` is owner-only
-(it holds the email), so the leaderboard reads this instead. Written by
-`syncLeaderboard` in `src/lib/leaderboard.ts`; `firestore.rules` caps each
-write at +200 XP and one write per 10 seconds.
+(it holds the email), so the leaderboard reads this instead. Written only by the
+server (`server/progress.ts`), which works out XP from saved progress; the app
+asks for an update through `syncLeaderboard` in `src/lib/leaderboard.ts`.
 
 ```json
 {
