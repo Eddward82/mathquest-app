@@ -1,5 +1,6 @@
 import { create } from "zustand";
-import { firestore, userDoc } from "../lib/firebase";
+import { userDoc } from "../lib/firebase";
+import { apiPost } from "../lib/api";
 import { useProgressStore } from "./progressStore";
 import Purchases, {
   PurchasesPackage,
@@ -80,7 +81,8 @@ interface SubscriptionState {
   loadSubscription: (userId: string) => Promise<void>;
   loadPlans: () => Promise<void>;
   canStartLesson: (lessonId?: string) => boolean;
-  recordLessonStarted: (userId: string, lessonId: string) => Promise<void>;
+  /** Resolves to false if the server says the user is out of free lessons. */
+  recordLessonStarted: (userId: string, lessonId: string) => Promise<boolean>;
   purchasePlan: (planId: PlanId) => Promise<PurchaseResult>;
   restorePurchases: () => Promise<PurchaseResult>;
   activatePremium: (userId: string, planId: PlanId) => Promise<PurchaseResult>;
@@ -185,6 +187,13 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
       const startedLessonIds = new Set<string>(data.started_lesson_ids ?? []);
       const lessonsStartedTotal = Math.max(data.lessons_started_total ?? 0, startedLessonIds.size);
       set({ startedLessonIds, lessonsStartedTotal });
+
+      // Lessons started offline never reached the server. Tell it now, or
+      // they'd count for nothing on the leaderboard.
+      const { completedLessonIds } = useProgressStore.getState();
+      for (const lessonId of completedLessonIds) {
+        if (!startedLessonIds.has(lessonId)) void recordStartOnServer(lessonId);
+      }
     } catch {
       // Offline — keep existing local state
     }
@@ -198,22 +207,16 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
   },
 
   recordLessonStarted: async (userId, lessonId) => {
-    if (isAlreadyCounted(lessonId)) return;
     const { startedLessonIds, lessonsStartedTotal } = get();
-    set({
-      startedLessonIds: new Set(startedLessonIds).add(lessonId),
-      lessonsStartedTotal: lessonsStartedTotal + 1,
-    });
-    if (userId === "guest") return;
-    try {
-      // arrayUnion is idempotent and never overwrites with a stale local
-      // count, so it can't trip the "counter may only grow" security rule.
-      await userDoc(userId).update({
-        started_lesson_ids: firestore.FieldValue.arrayUnion(lessonId),
+    if (startedLessonIds.has(lessonId)) return true;
+    if (!isAlreadyCounted(lessonId)) {
+      set({
+        startedLessonIds: new Set(startedLessonIds).add(lessonId),
+        lessonsStartedTotal: lessonsStartedTotal + 1,
       });
-    } catch {
-      // Offline — the write is queued and local state is already updated
     }
+    if (userId === "guest") return true;
+    return recordStartOnServer(lessonId);
   },
 
   purchasePlan: async (planId) => {
@@ -296,6 +299,26 @@ export const useSubscriptionStore = create<SubscriptionState>((set, get) => ({
     });
   },
 }));
+
+// The server owns the count. If it can't be reached the lesson carries on: the
+// local check still applies, and the next launch reports it.
+async function recordStartOnServer(lessonId: string): Promise<boolean> {
+  try {
+    const { data } = await apiPost<{
+      allowed: boolean;
+      startedLessonIds: string[];
+      lessonsStartedTotal: number;
+    }>("/api/progress/lesson-start", { lessonId });
+    if (!data) return true;
+    useSubscriptionStore.setState({
+      startedLessonIds: new Set(data.startedLessonIds),
+      lessonsStartedTotal: data.lessonsStartedTotal,
+    });
+    return data.allowed;
+  } catch {
+    return true;
+  }
+}
 
 // A lesson already started (or finished before per-lesson tracking existed)
 // never costs another free start.

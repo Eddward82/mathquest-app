@@ -77,6 +77,7 @@ export interface Account {
   createdAtMs: number;
   emailVerified: boolean;
   disabled: boolean;
+  displayName?: string;
 }
 
 export interface GuardDeps {
@@ -365,6 +366,7 @@ export function firebaseAccountLookup(getApp: () => App) {
         createdAtMs: Date.parse(user.metadata.creationTime),
         emailVerified: user.emailVerified,
         disabled: user.disabled,
+        displayName: user.displayName,
       };
     } catch (err: any) {
       if (err?.code === "auth/user-not-found") return null;
@@ -373,15 +375,16 @@ export function firebaseAccountLookup(getApp: () => App) {
   };
 }
 
-export async function revenueCatHasPremium(uid: string): Promise<boolean> {
+/** Resolves to null when the subscription can't be checked. */
+export async function lookupRevenueCatPremium(uid: string): Promise<boolean | null> {
   const secretKey = process.env.REVENUECAT_SECRET_KEY;
-  if (!secretKey) return false;
+  if (!secretKey) return null;
   try {
     const res = await fetch(
       `https://api.revenuecat.com/v1/subscribers/${encodeURIComponent(uid)}`,
       { headers: { Authorization: `Bearer ${secretKey}` }, signal: AbortSignal.timeout(5000) }
     );
-    if (!res.ok) return false;
+    if (!res.ok) return null;
     const body = (await res.json()) as {
       subscriber?: { entitlements?: Record<string, { expires_date: string | null }> };
     };
@@ -389,8 +392,12 @@ export async function revenueCatHasPremium(uid: string): Promise<boolean> {
     return !!ent && (ent.expires_date === null || Date.parse(ent.expires_date) > Date.now());
   } catch (err: any) {
     console.warn("RevenueCat lookup failed:", err?.message);
-    return false;
+    return null;
   }
+}
+
+export async function revenueCatHasPremium(uid: string): Promise<boolean> {
+  return (await lookupRevenueCatPremium(uid)) === true;
 }
 
 export function sendAlert(text: string) {

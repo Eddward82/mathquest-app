@@ -25,8 +25,7 @@ import { Feather } from "@expo/vector-icons";
 // so SSE must go through expo/fetch, which implements ReadableStream.
 import { fetch as streamingFetch } from "expo/fetch";
 import { COLORS, BORDER_RADIUS } from "../../constants/theme";
-import { auth } from "../../lib/firebase";
-import { getAppCheckToken } from "../../lib/appCheck";
+import { apiHeaders } from "../../lib/api";
 import {
   ExplanationData,
   ExplanationStep,
@@ -199,27 +198,7 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
     const apiUrl = process.env.EXPO_PUBLIC_API_URL;
     const safeQuestion = sanitizeQuestion(question);
 
-    // Shared secret checked by the proxy (deters drive-by abuse of the
-    // public endpoint). Configured via EXPO_PUBLIC_APP_PROXY_KEY.
-    // The Firebase ID token proves a real signed-in user — the proxy verifies
-    // it when REQUIRE_FIREBASE_AUTH is on. If it can't be fetched (offline),
-    // send without it and let the server decide.
-    // The App Check token proves the request comes from the genuine app — the
-    // proxy verifies it when REQUIRE_APP_CHECK is on.
-    let idToken: string | undefined;
-    try {
-      idToken = await auth().currentUser?.getIdToken();
-    } catch {}
-    const appCheckToken = await getAppCheckToken();
-
-    const headers = {
-      "Content-Type": "application/json",
-      ...(process.env.EXPO_PUBLIC_APP_PROXY_KEY
-        ? { "x-app-key": process.env.EXPO_PUBLIC_APP_PROXY_KEY }
-        : {}),
-      ...(idToken ? { Authorization: `Bearer ${idToken}` } : {}),
-      ...(appCheckToken ? { "X-Firebase-AppCheck": appCheckToken } : {}),
-    };
+    const headers = await apiHeaders();
     const body = JSON.stringify({ question: safeQuestion });
 
     // Accumulates the streamed answer. Hoisted out of the try so the catch

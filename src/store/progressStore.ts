@@ -154,7 +154,7 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
       });
 
       // Catch the public leaderboard entry up with the saved XP.
-      syncLeaderboard(userId, totalXP);
+      syncLeaderboard(userId);
     } catch {
       // Offline or guest — keep existing local state
     } finally {
@@ -208,7 +208,7 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
         current_level: newLevel,
         adaptive_difficulty_score: newDiffScore,
       }, { merge: true });
-      syncLeaderboard(userId, newXP);
+      syncLeaderboard(userId);
     } catch {
       // Offline — local state already updated optimistically
     }
@@ -257,7 +257,7 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
       completed_at: new Date().toISOString(),
     });
     await userDoc(userId).update({ total_xp: newXP, current_level: computeLevel(newXP) });
-    syncLeaderboard(userId, newXP);
+    syncLeaderboard(userId);
   },
 
   completeDailyChallenge: async (userId, xpEarned) => {
@@ -271,7 +271,7 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
       current_level: computeLevel(newXP),
       daily_challenge_completed_date: today,
     });
-    syncLeaderboard(userId, newXP);
+    syncLeaderboard(userId);
     await unlockAchievement(userId, "ach_daily_challenge");
   },
 

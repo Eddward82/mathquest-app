@@ -25,13 +25,12 @@ service cloud.firestore {
           'id', 'email', 'username', 'display_name', 'avatar_url', 'skill_level',
           'total_xp', 'current_level', 'created_at', 'adaptive_difficulty_score',
           'goal', 'daily_target_minutes', 'focus_topics', 'onboarding_completed',
-          'started_lesson_ids', 'lessons_started_total', 'daily_challenge_completed_date'
+          'daily_challenge_completed_date'
         ])
         && d.get('email', '').size() <= 320
         && d.get('username', '').size() <= 100
         && d.get('display_name', '').size() <= 100
-        && d.get('focus_topics', []).size() <= 50
-        && d.get('started_lesson_ids', []).size() <= 500;
+        && d.get('focus_topics', []).size() <= 50;
     }
 
     // Documents the app stores under users/{uid}, by subcollection. Rules can't
@@ -64,23 +63,10 @@ service cloud.firestore {
       // them. The leaderboard reads the separate leaderboard/{uid} entries.
       allow read: if isOwner(uid);
 
-      // Premium entitlement is granted by RevenueCat receipts only; clients may
-      // never write it. The free-lesson counters may only grow (the legacy
-      // total and the started-lesson list), so a user can't reset their quota.
-      allow create: if isOwner(uid)
-        && isValidProfileWrite()
-        && !request.resource.data.keys().hasAny(['is_premium', 'premium_expires_at']);
-
-      allow update: if isOwner(uid)
-        && isValidProfileWrite()
-        && !request.resource.data.diff(resource.data).affectedKeys()
-            .hasAny(['is_premium', 'premium_expires_at'])
-        && (!request.resource.data.diff(resource.data).affectedKeys()
-              .hasAny(['lessons_started_total'])
-            || request.resource.data.lessons_started_total
-                 >= resource.data.get('lessons_started_total', 0))
-        && request.resource.data.get('started_lesson_ids', [])
-             .hasAll(resource.data.get('started_lesson_ids', []));
+      // Fields outside the allowed list can never be written by clients. That
+      // includes premium status (granted by RevenueCat receipts only) and the
+      // free-lesson count (written only by the server, in server/progress.ts).
+      allow create, update: if isOwner(uid) && isValidProfileWrite();
 
       // Account deletion removes the user's own doc.
       allow delete: if isOwner(uid);
@@ -95,35 +81,10 @@ service cloud.firestore {
     }
 
     // ── Public leaderboard ───────────────────────────────────────────────────
-    // XP is client-reported, so these limits bound how fast anyone can climb:
-    // at most 200 XP per write, one write per 10 seconds, and the level must
-    // match the XP. Keep in sync with src/lib/leaderboard.ts and XP_PER_LEVEL.
-    function isValidLeaderboardEntry() {
-      let d = request.resource.data;
-      return d.keys().hasOnly(['display_name', 'total_xp', 'current_level', 'updated_at'])
-        && d.keys().hasAll(['display_name', 'total_xp', 'current_level', 'updated_at'])
-        && d.display_name is string
-        && d.display_name.size() > 0
-        && d.display_name.size() <= 40
-        && d.total_xp is int
-        && d.total_xp >= 0
-        && d.current_level == math.floor(d.total_xp / 500) + 1
-        && d.updated_at == request.time;
-    }
-
+    // Written only by the server, which works out XP from saved progress (see
+    // server/progress.ts). Owners can still delete theirs, for account deletion.
     match /leaderboard/{uid} {
       allow read: if request.auth != null;
-
-      allow create: if isOwner(uid)
-        && isValidLeaderboardEntry()
-        && request.resource.data.total_xp <= 200;
-
-      allow update: if isOwner(uid)
-        && isValidLeaderboardEntry()
-        && request.resource.data.total_xp >= resource.data.total_xp
-        && request.resource.data.total_xp <= resource.data.total_xp + 200
-        && request.time > resource.data.updated_at + duration.value(10, 's');
-
       allow delete: if isOwner(uid);
     }
   }

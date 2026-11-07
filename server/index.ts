@@ -19,9 +19,11 @@ import {
   firebaseAccountLookup,
   firestoreUsageStore,
   ipSubject,
+  lookupRevenueCatPremium,
   revenueCatHasPremium,
   sendAlert,
 } from "./usageGuard";
+import { createProgressService, isKnownLesson } from "./progress";
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -150,15 +152,17 @@ const aiLimiter = rateLimit({
 // Rate limit across every account on one IP, so a script can't dodge the limit
 // above by cycling through accounts. Generous, as schools and carriers put many
 // real users behind one address. Runs first, so floods are turned away before
-// any token verification work.
-const ipLimiter = rateLimit({
-  windowMs: 10 * 60 * 1000,
-  max: Number.parseInt(process.env.AI_IP_RATE_LIMIT ?? "120", 10),
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: (req) => `ip:${ipSubject(req.ip)}`,
-  message: { error: "Too many requests from this network — please try again shortly." },
-});
+// any token verification work. AI and progress calls are counted separately.
+const createIpLimiter = () =>
+  rateLimit({
+    windowMs: 10 * 60 * 1000,
+    max: Number.parseInt(process.env.AI_IP_RATE_LIMIT ?? "120", 10),
+    standardHeaders: true,
+    legacyHeaders: false,
+    keyGenerator: (req) => `ip:${ipSubject(req.ip)}`,
+    message: { error: "Too many requests from this network — please try again shortly." },
+  });
+const ipLimiter = createIpLimiter();
 
 // Shared-secret check. The mobile app sends `x-app-key`; the server compares it
 // to APP_PROXY_KEY. NOTE: because the client value ships in the app bundle this
@@ -302,6 +306,71 @@ app.post("/api/explain/stream", async (req, res) => {
     console.error("OpenAI stream error:", err?.message ?? err);
     res.write(`data: ${JSON.stringify({ error: "Failed to generate explanation" })}\n\n`);
     res.end();
+  }
+});
+
+// ─── Server-owned progress ────────────────────────────────────────────────────
+// Unlike the AI routes, these always need a verified account: they write to it,
+// so there's no per-IP mode. See progress.ts.
+const progress = createProgressService({
+  getApp: getFirebaseApp,
+  lookupPremium: lookupRevenueCatPremium,
+});
+const findAccount = firebaseAccountLookup(getFirebaseApp);
+
+const progressLimiter = rateLimit({
+  windowMs: 10 * 60 * 1000,
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (_req, res) => `uid:${res.locals.uid}`,
+  message: { error: "Too many requests — please slow down and try again shortly." },
+});
+
+async function requireVerifiedAccount(_req: Request, res: Response, next: NextFunction) {
+  const uid = res.locals.uid as string | undefined;
+  if (!uid) return res.status(401).json({ error: "Please sign in." });
+  try {
+    const account = await findAccount(uid);
+    if (!account || account.disabled) return res.status(401).json({ error: "Please sign in." });
+    if (!account.emailVerified) return res.status(403).json({ code: "email_unverified", error: "Please verify your email." });
+    res.locals.account = account;
+    next();
+  } catch (err: any) {
+    console.error("Account lookup failed:", err?.message ?? err);
+    res.status(503).json({ error: "Please try again shortly." });
+  }
+}
+
+app.use(
+  "/api/progress",
+  requireAppKey,
+  createIpLimiter(),
+  requireAppCheck,
+  requireFirebaseUser,
+  requireVerifiedAccount,
+  progressLimiter
+);
+
+// Records that the user started a lesson, or refuses if they're out of free ones.
+app.post("/api/progress/lesson-start", async (req, res) => {
+  const { lessonId } = req.body as { lessonId?: unknown };
+  if (!isKnownLesson(lessonId)) return res.status(400).json({ error: "Unknown lesson" });
+  try {
+    return res.json(await progress.startLesson(res.locals.uid, lessonId));
+  } catch (err: any) {
+    console.error("Lesson start failed:", err?.message ?? err);
+    return res.status(503).json({ error: "Please try again shortly." });
+  }
+});
+
+// Updates the user's public leaderboard entry from their saved progress.
+app.post("/api/progress/leaderboard-sync", async (_req, res) => {
+  try {
+    return res.json(await progress.syncLeaderboard(res.locals.uid, res.locals.account));
+  } catch (err: any) {
+    console.error("Leaderboard sync failed:", err?.message ?? err);
+    return res.status(503).json({ error: "Please try again shortly." });
   }
 });
 
