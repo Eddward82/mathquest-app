@@ -5,6 +5,60 @@ service cloud.firestore {
       return request.auth != null && request.auth.uid == uid;
     }
 
+    // The fields this write adds, changes or removes. Checking only these (not
+    // every field) means documents holding a legacy field can still be updated.
+    function changedKeys() {
+      return request.resource.data
+        .diff(resource == null ? {} : resource.data)
+        .affectedKeys();
+    }
+
+    function isShortString(value) {
+      return value is string && value.size() <= 64;
+    }
+
+    // Only fields the app really writes, in bounded sizes, so nobody can use a
+    // profile as free storage or run up Firestore costs with junk data.
+    function isValidProfileWrite() {
+      let d = request.resource.data;
+      return changedKeys().hasOnly([
+          'id', 'email', 'username', 'display_name', 'avatar_url', 'skill_level',
+          'total_xp', 'current_level', 'created_at', 'adaptive_difficulty_score',
+          'goal', 'daily_target_minutes', 'focus_topics', 'onboarding_completed',
+          'started_lesson_ids', 'lessons_started_total', 'daily_challenge_completed_date'
+        ])
+        && d.get('email', '').size() <= 320
+        && d.get('username', '').size() <= 100
+        && d.get('display_name', '').size() <= 100
+        && d.get('focus_topics', []).size() <= 50
+        && d.get('started_lesson_ids', []).size() <= 500;
+    }
+
+    // Documents the app stores under users/{uid}, by subcollection. Rules can't
+    // limit how many documents exist, so IDs and fields are held to what's real.
+    function isValidUserSubdoc(subcollection, docId) {
+      let d = request.resource.data;
+      return docId.size() <= 64 && (
+        (subcollection == 'progress'
+          && changedKeys().hasOnly(['lesson_id', 'topic_id', 'completed', 'xp_earned', 'mistakes', 'difficulty_delta', 'completed_at'])
+          && d.lesson_id == docId
+          && isShortString(d.get('topic_id', ''))
+          && isShortString(d.get('completed_at', '')))
+        || (subcollection == 'streaks'
+          && docId == 'data'
+          && changedKeys().hasOnly(['current_streak', 'longest_streak', 'last_activity_date'])
+          && (d.get('last_activity_date', null) == null || isShortString(d.last_activity_date)))
+        || (subcollection == 'achievements'
+          && changedKeys().hasOnly(['achievement_id', 'unlocked_at'])
+          && d.achievement_id == docId
+          && isShortString(d.get('unlocked_at', '')))
+        || (subcollection == 'reviews'
+          && changedKeys().hasOnly(['topic_id', 'score', 'xp_earned', 'completed_at'])
+          && d.topic_id == docId
+          && isShortString(d.get('completed_at', '')))
+      );
+    }
+
     match /users/{uid} {
       // Profiles hold private fields (email, goals), so only the owner reads
       // them. The leaderboard reads the separate leaderboard/{uid} entries.
@@ -14,9 +68,11 @@ service cloud.firestore {
       // never write it. The free-lesson counters may only grow (the legacy
       // total and the started-lesson list), so a user can't reset their quota.
       allow create: if isOwner(uid)
+        && isValidProfileWrite()
         && !request.resource.data.keys().hasAny(['is_premium', 'premium_expires_at']);
 
       allow update: if isOwner(uid)
+        && isValidProfileWrite()
         && !request.resource.data.diff(resource.data).affectedKeys()
             .hasAny(['is_premium', 'premium_expires_at'])
         && (!request.resource.data.diff(resource.data).affectedKeys()
@@ -29,9 +85,12 @@ service cloud.firestore {
       // Account deletion removes the user's own doc.
       allow delete: if isOwner(uid);
 
-      // progress / streaks / achievements / reviews — owner only.
+      // progress / streaks / achievements / reviews — owner only. Reads and
+      // deletes stay open to the owner for any name, so account deletion and
+      // data export keep working.
       match /{subcollection}/{docId} {
-        allow read, write: if isOwner(uid);
+        allow read, delete: if isOwner(uid);
+        allow create, update: if isOwner(uid) && isValidUserSubdoc(subcollection, docId);
       }
     }
 

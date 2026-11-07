@@ -145,9 +145,11 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
   const [slowHint, setSlowHint] = useState(false);
   // Diagnostic detail shown on the error card while debugging field issues.
   const [errorDetail, setErrorDetail] = useState("");
-  // Set when the proxy refuses with 429 (daily limit / tutor paused) — shown
-  // instead of the generic connection error, since retrying won't help.
+  // Set when the proxy refuses the request (daily limit, tutor paused, email not
+  // verified, signed out) — shown instead of the generic connection error, since
+  // retrying won't help.
   const [limitMessage, setLimitMessage] = useState<string | null>(null);
+  const [limitTitle, setLimitTitle] = useState("Daily limit reached");
   const abortRef = useRef<AbortController | null>(null);
   const lastFetchRef = useRef<number>(0);
   const slowTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -235,13 +237,19 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
         signal: controller.signal,
       });
 
-      if (response.status === 429) {
-        let message = "You've reached today's AI tutor limit. Please try again tomorrow.";
+      if (response.status === 429 || response.status === 401 || response.status === 403) {
+        const isLimit = response.status === 429;
+        let message = isLimit
+          ? "You've reached today's AI tutor limit. Please try again tomorrow."
+          : "Please sign in again to use the AI tutor.";
         try {
           const parsed = JSON.parse(await response.text());
           if (typeof parsed?.error === "string") message = parsed.error;
         } catch {}
-        throw Object.assign(new Error("Rate limited"), { limitMessage: message });
+        throw Object.assign(new Error("Request refused"), {
+          limitMessage: message,
+          limitTitle: isLimit ? "Daily limit reached" : "AI tutor unavailable",
+        });
       }
       if (!response.ok) throw new Error(`API error: ${response.status}`);
 
@@ -296,9 +304,10 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
       if (slowTimerRef.current) clearTimeout(slowTimerRef.current);
       setSlowHint(false);
 
-      // Over the daily limit — the JSON endpoint would refuse too.
+      // Refused by the proxy — the JSON endpoint would refuse too.
       if (err?.limitMessage) {
         setLimitMessage(err.limitMessage);
+        setLimitTitle(err.limitTitle);
         setStatus("error");
         return;
       }
@@ -434,7 +443,7 @@ export const AIHelpModal: React.FC<AIHelpModalProps> = ({ visible, question, onC
               <Animated.View entering={FadeIn} style={styles.errorContainer}>
                 <Text style={{ fontSize: 32 }}>😕</Text>
                 <Text style={styles.errorTitle}>
-                  {limitMessage ? "Daily limit reached" : "Couldn’t get an explanation"}
+                  {limitMessage ? limitTitle : "Couldn’t get an explanation"}
                 </Text>
                 <Text style={styles.errorSub}>
                   {limitMessage ?? "Check your connection and try again."}

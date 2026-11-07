@@ -4,6 +4,7 @@
   "scripts": {
     "dev": "ts-node index.ts",
     "build": "tsc",
+    "test": "node -r ts-node/register --test usageGuard.test.ts",
     "start": "tsc && node dist/index.js"
   },
   "dependencies": {
